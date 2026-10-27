@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#04070f">
+<title>Nexus</title>
+<style>
+:root{--bg:#04070f;--glass:rgba(20,35,70,.45);--line:rgba(120,170,255,.18);--blue:#3b82f6;--txt:#e8f0ff;--dim:#8aa0c8}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{font-family:system-ui,sans-serif;color:var(--txt);background:var(--bg);overflow:hidden;
+ padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+body::before,body::after{content:"";position:fixed;width:50vmax;height:50vmax;border-radius:50%;filter:blur(90px);z-index:-1;opacity:.55}
+body::before{background:#1d4ed8;top:-20vmax;left:-15vmax}
+body::after{background:#0ea5e9;bottom:-25vmax;right:-15vmax;opacity:.35}
+.glass{background:var(--glass);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:1px solid var(--line);border-radius:18px}
+button,input{font:inherit;color:inherit}
+input{background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:12px;padding:12px 14px;outline:none;width:100%}
+input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.25)}
+.btn{background:linear-gradient(135deg,#2563eb,#38bdf8);border:0;border-radius:12px;padding:12px 18px;cursor:pointer;font-weight:600}
+.ghost{background:none;border:0;cursor:pointer;color:var(--dim);padding:8px 12px;border-radius:10px;text-align:left;width:100%}
+.ghost:hover,.ghost.on{background:rgba(59,130,246,.2);color:var(--txt)}
+#auth{height:100%;display:grid;place-items:center;padding:20px}
+#auth form{width:min(380px,100%);padding:28px;display:grid;gap:12px}
+#auth h1{font-size:28px;text-align:center}
+#auth small{color:var(--dim);text-align:center;cursor:pointer}
+#app{display:none;height:100%;gap:12px;padding:12px}
+#side{width:250px;padding:14px;display:flex;flex-direction:column;gap:4px;overflow:auto}
+#side h3{font-size:11px;letter-spacing:.1em;color:var(--dim);margin:12px 8px 4px}
+#main{flex:1;display:flex;flex-direction:column;min-width:0}
+#head{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;font-weight:600}
+#menu{display:none}
+#msgs{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+.m{max-width:75%;padding:10px 14px;border-radius:16px;background:rgba(30,50,100,.45);border:1px solid var(--line);word-break:break-word}
+.m.me{align-self:flex-end;background:linear-gradient(135deg,rgba(37,99,235,.7),rgba(14,165,233,.5))}
+.m b{display:block;font-size:12px;color:#7cb2ff;margin-bottom:2px}
+.m a{color:#9fd0ff}.m audio{height:36px;max-width:100%}
+#bar{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line)}
+#mic.rec{background:#dc2626;animation:p 1s infinite}
+@keyframes p{50%{opacity:.5}}
+@media(max-width:700px){
+ #app{padding:0;gap:0}#app .glass{border-radius:0;border-width:0}
+ #side{position:fixed;inset:0 auto 0 0;z-index:5;transform:translateX(-100%);transition:.25s;width:80%;background:rgba(6,12,30,.92)}
+ #side.open{transform:none}#menu{display:block}.m{max-width:88%}
+}
+</style>
+</head>
+<body>
+
+<div id="auth">
+  <form class="glass" id="authForm">
+    <h1>✦ Nexus</h1>
+    <input id="user" placeholder="Pseudo" autocomplete="username" style="display:none">
+    <input id="email" type="email" placeholder="Email" required autocomplete="email">
+    <input id="pass" type="password" placeholder="Mot de passe (6+ caractères)" required autocomplete="current-password">
+    <button class="btn" id="authBtn">Se connecter</button>
+    <small id="toggle">Pas de compte ? Créer un compte</small>
+    <small id="err" style="color:#f87171;cursor:default"></small>
+  </form>
+</div>
+
+<div id="app">
+  <aside id="side" class="glass">
+    <h3>SALONS</h3>
+    <div id="channels"></div>
+    <h3>MESSAGES PRIVÉS</h3>
+    <div id="dms"></div>
+    <button class="ghost" id="logout" style="margin-top:auto">⏻ Déconnexion</button>
+  </aside>
+  <section id="main" class="glass">
+    <div id="head"><button class="ghost" id="menu" style="width:auto">☰</button><span id="title"></span></div>
+    <div id="msgs"></div>
+    <div id="bar">
+      <button class="btn" id="mic" title="Message vocal">🎙</button>
+      <input id="text" placeholder="Écrire un message…" autocomplete="off">
+      <button class="btn" id="send">➤</button>
+    </div>
+  </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+// ⚙️ Colle ici les infos de ton projet Supabase (Settings > API)
+const SUPABASE_URL = 'https://yugsfrkvmgjtymbwocqs.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_37O6tX6P-t7c0gJHmyUv2A_E6FP-zWG';
+
+const CHANNELS = [['general','💬','général'],['bons-plans','🔥','bons plans'],['films','🎬','films'],['series','📺','séries']];
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = id => document.getElementById(id);
+let me, names = {}, channel = 'general', signup = false, rec, chunks = [];
+
+const esc = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const linkify = s => esc(s).replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+const dmId = other => 'dm:' + [me.id, other].sort().join(':');
+
+// --- Connexion ---
+$('toggle').onclick = () => {
+  signup = !signup;
+  $('user').style.display = signup ? '' : 'none';
+  $('authBtn').textContent = signup ? 'Créer le compte' : 'Se connecter';
+  $('toggle').textContent = signup ? 'Déjà un compte ? Se connecter' : 'Pas de compte ? Créer un compte';
+};
+$('authForm').onsubmit = async e => {
+  e.preventDefault(); $('err').textContent = '';
+  const email = $('email').value, password = $('pass').value;
+  const { error } = signup
+    ? await db.auth.signUp({ email, password, options: { data: { username: $('user').value || email.split('@')[0] } } })
+    : await db.auth.signInWithPassword({ email, password });
+  if (error) $('err').textContent = error.message;
+};
+$('logout').onclick = () => db.auth.signOut();
+
+db.auth.onAuthStateChange((_, session) => {
+  if (session) start(session.user);
+  else { $('app').style.display = 'none'; $('auth').style.display = 'grid'; }
+});
+
+async function start(user) {
+  me = user;
+  $('auth').style.display = 'none'; $('app').style.display = 'flex';
+  const { data } = await db.from('profiles').select('*');
+  (data || []).forEach(p => names[p.id] = p.username);
+  renderSide(); open('general');
+  db.channel('live').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, p => {
+    if (p.new.channel === channel) addMsg(p.new);
+  }).subscribe();
+}
+
+// --- Navigation ---
+function renderSide() {
+  $('channels').innerHTML = CHANNELS.map(([id, ico, n]) => `<button class="ghost" data-c="${id}">${ico} ${n}</button>`).join('');
+  $('dms').innerHTML = Object.entries(names).filter(([id]) => id !== me.id)
+    .map(([id, n]) => `<button class="ghost" data-c="${dmId(id)}" data-n="${esc(n)}">👤 ${esc(n)}</button>`).join('');
+  document.querySelectorAll('#side .ghost[data-c]').forEach(b => b.onclick = () => open(b.dataset.c, b.dataset.n));
+}
+async function open(id, label) {
+  channel = id;
+  const c = CHANNELS.find(c => c[0] === id);
+  $('title').textContent = c ? `${c[1]} ${c[2]}` : '👤 ' + (label || 'Privé');
+  document.querySelectorAll('#side .ghost[data-c]').forEach(b => b.classList.toggle('on', b.dataset.c === id));
+  $('side').classList.remove('open'); $('msgs').innerHTML = '';
+  const { data } = await db.from('messages').select('*').eq('channel', id).order('created_at').limit(200);
+  (data || []).forEach(addMsg);
+}
+$('menu').onclick = () => $('side').classList.toggle('open');
+
+// --- Messages ---
+function addMsg(m) {
+  const d = document.createElement('div');
+  d.className = 'm' + (m.user_id === me.id ? ' me' : '');
+  const body = m.audio_url ? `<audio controls src="${esc(m.audio_url)}"></audio>` : linkify(m.content || '');
+  d.innerHTML = `<b>${esc(names[m.user_id] || '?')}</b>${body}`;
+  $('msgs').append(d); $('msgs').scrollTop = 1e9;
+}
+async function send(fields) {
+  const { error } = await db.from('messages').insert({ channel, ...fields });
+  if (error) alert(error.message);
+}
+$('send').onclick = async () => { const t = $('text').value.trim(); if (!t) return; $('text').value = ''; await send({ content: t }); };
+$('text').onkeydown = e => { if (e.key === 'Enter') $('send').click(); };
+
+// --- Vocal ---
+$('mic').onclick = async () => {
+  if (rec && rec.state === 'recording') return rec.stop();
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    rec = new MediaRecorder(stream); chunks = [];
+    rec.ondataavailable = e => chunks.push(e.data);
+    rec.onstop = async () => {
+      stream.getTracks().forEach(t => t.stop()); $('mic').classList.remove('rec');
+      const type = rec.mimeType || 'audio/webm';
+      const path = `${me.id}/${Date.now()}.${type.includes('mp4') ? 'm4a' : 'webm'}`;
+      const { error } = await db.storage.from('voice').upload(path, new Blob(chunks, { type }), { contentType: type });
+      if (error) return alert(error.message);
+      send({ audio_url: db.storage.from('voice').getPublicUrl(path).data.publicUrl });
+    };
+    rec.start(); $('mic').classList.add('rec');
+  } catch { alert('Micro non autorisé.'); }
+};
+</script>
+</body>
+</html>
