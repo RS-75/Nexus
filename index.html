@@ -39,7 +39,7 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.25)}
 #auth small{color:var(--dim);cursor:pointer;padding:6px}
 /* app */
 #app{display:none;flex-direction:column;height:100%;max-width:620px;margin:0 auto;position:relative}
-.panel{display:none;flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:22px 18px calc(110px + env(safe-area-inset-bottom))}
+.panel{display:none;flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:22px 18px calc(96px + env(safe-area-inset-bottom))}
 .panel.on{display:block}
 .panel h2{font-size:30px;letter-spacing:-.02em}.panel .sub{color:var(--dim);margin:4px 0 20px}
 .card{display:flex;align-items:center;gap:14px;width:100%;padding:14px 16px;margin-bottom:10px;text-align:left;cursor:pointer;transition:.2s}
@@ -48,7 +48,7 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.25)}
 .ico{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;font-size:22px;flex:none;background:linear-gradient(135deg,rgba(37,99,235,.55),rgba(56,189,248,.25));border:1px solid var(--line)}
 .av{border-radius:50%;font-weight:700;font-size:18px}
 /* tab bar */
-#tabs{position:absolute;left:14px;right:14px;bottom:calc(12px + env(safe-area-inset-bottom));display:flex;padding:8px;gap:4px;z-index:5;border-radius:26px}
+#tabs{position:absolute;left:0;right:0;bottom:0;display:flex;padding:8px 10px calc(8px + env(safe-area-inset-bottom));gap:4px;z-index:5;border-radius:24px 24px 0 0;border-bottom:0;background:rgba(8,15,35,.78)}
 #tabs button{flex:1;background:none;border:0;border-radius:18px;padding:8px 0 6px;color:var(--dim);display:grid;justify-items:center;gap:3px;font-size:11px;cursor:pointer;transition:.2s}
 #tabs button svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 #tabs button.on{color:#fff;background:rgba(59,130,246,.28);box-shadow:0 0 22px rgba(59,130,246,.35)}
@@ -104,7 +104,20 @@ body{height:var(--h,auto);overscroll-behavior:none;position:fixed;inset:0;width:
 .cb.mute{background:rgba(220,38,38,.45)}.cb.end{background:#dc2626;border:0}.cb.end .i{transform:rotate(135deg)}
 .chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:18px 0;color:var(--dim)}
 .chip{padding:6px 12px;border-radius:20px;background:rgba(59,130,246,.22);border:1px solid var(--line);color:var(--txt);font-size:14px}
-.kb #bar{padding-bottom:10px}.kb #tabs{bottom:12px}
+.kb #bar{padding-bottom:10px}.kb #tabs{padding-bottom:8px}
+#imgBtn{background:rgba(59,130,246,.22);border:1px solid var(--line);cursor:pointer}
+.row{display:flex;gap:8px;align-items:flex-end;max-width:88%;align-self:flex-start}.row.me{align-self:flex-end}
+.col{display:flex;flex-direction:column;min-width:0}.row.me .col{align-items:flex-end}.col .m{max-width:100%;align-self:auto}
+.q{font-size:12px;opacity:.8;border-left:3px solid #8cc0ff;padding-left:8px;margin-bottom:5px;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pic{max-width:100%;max-height:320px;border-radius:12px;display:block}
+.rx{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
+.rc{padding:2px 9px;border-radius:12px;background:rgba(59,130,246,.2);border:1px solid var(--line);font-size:13px;cursor:pointer}.rc.mine{border-color:var(--blue);background:rgba(59,130,246,.45)}
+.act{display:none;flex-wrap:wrap;gap:4px;margin-top:5px}.open .act{display:flex}
+.act button{background:rgba(20,35,75,.9);border:1px solid var(--line);border-radius:14px;padding:5px 10px;cursor:pointer;font-size:14px}
+.badge{margin-left:auto;min-width:22px;height:22px;border-radius:11px;background:#2563eb;display:grid;place-items:center;font-size:12px;font-weight:700;padding:0 6px;box-shadow:0 0 12px rgba(59,130,246,.6)}.badge+.chev{margin-left:8px}
+#replyBar{display:none;align-items:center;gap:10px;padding:8px 14px;border-top:1px solid var(--line);font-size:13px;color:var(--dim);background:rgba(37,99,235,.12)}
+#replyTxt{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#replyX{background:none;border:0;color:var(--dim);font-size:18px;cursor:pointer}
+body{background:radial-gradient(80% 40% at 50% 100%,rgba(29,78,216,.38),transparent 70%),var(--bg)}
 </style>
 </head>
 <body>
@@ -147,7 +160,9 @@ body{height:var(--h,auto);overscroll-behavior:none;position:fixed;inset:0;width:
     <div id="head"><button id="back" data-i="back"></button><span id="title"></span></div>
     <div class="deals" id="deals"></div>
     <div id="msgs"></div>
+    <div id="replyBar"><span id="replyTxt"></span><button id="replyX">✕</button></div>
     <div id="bar">
+      <button class="round" id="imgBtn" title="Photo" data-i="image"></button><input type="file" id="imgIn" accept="image/*" hidden>
       <button class="round" id="mic" title="Message vocal" data-i="mic"></button>
       <input id="text" placeholder="Message…" autocomplete="off">
       <button class="btn round" id="send" data-i="send"></button>
@@ -181,7 +196,8 @@ const IC = {
  back:'<path d="M15 5l-7 7 7 7"/>', next:'<path d="M9 5l7 7-7 7"/>',
  logout:'<path d="M9 4H5v16h4M16 8l4 4-4 4M20 12H9"/>',
  video:'<rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/>',
- screen:'<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>'
+ screen:'<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>',
+ image:'<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="M21 16l-5-5-8 8"/>'
 };
 const ic = n => `<svg class="i" viewBox="0 0 24 24">${IC[n]}</svg>`;
 document.querySelectorAll('[data-i]').forEach(e => e.insertAdjacentHTML('afterbegin', ic(e.dataset.i)));
@@ -250,9 +266,22 @@ async function start(user) {
   me = user;
   $('auth').style.display = 'none'; $('app').style.display = 'flex';
   await loadProfiles(); render(); if (!cch) setupCall();
-  db.channel('live').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, p => {
-    if ($('chat').classList.contains('on') && p.new.channel === channel) addMsg(p.new);
-  }).subscribe();
+  computeUnread();
+  db.channel('live')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, p => {
+      const m = p.new;
+      if ($('chat').classList.contains('on') && m.channel === channel) { addMsg(m); markSeen(channel); }
+      else if (m.user_id !== me.id) { unread[m.channel] = (unread[m.channel] || 0) + 1; render(); }
+    })
+    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages' }, p => { const r = $('m-' + p.old.id); if (r) r.remove(); })
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'reactions' }, p => {
+      const r = p.new, l = reacts[r.message_id] = reacts[r.message_id] || [];
+      if (!l.some(x => x.user_id === r.user_id && x.emoji === r.emoji)) { l.push(r); rxRender(r.message_id); }
+    })
+    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'reactions' }, p => {
+      const r = p.old; if (reacts[r.message_id]) { reacts[r.message_id] = reacts[r.message_id].filter(x => !(x.user_id === r.user_id && x.emoji === r.emoji)); rxRender(r.message_id); }
+    })
+    .subscribe();
 }
 
 // Navigation
@@ -260,15 +289,15 @@ function render() {
   const n = names[me.id] || 'toi';
   $('hello').textContent = 'Salut, ' + n;
   $('channels').innerHTML = CHANNELS.map(([id, i, t, d]) =>
-    `<button class="card glass" data-c="${id}" data-n="${t}"><div class="ico">${ic(i)}</div><div><b>${t}</b><span class="d">${d}</span></div><span class="chev">${ic('next')}</span></button>`).join('');
+    `<button class="card glass" data-c="${id}" data-n="${t}"><div class="ico">${ic(i)}</div><div><b>${t}</b><span class="d">${d}</span></div>${badge(id)}<span class="chev">${ic('next')}</span></button>`).join('');
   const others = Object.entries(names).filter(([id]) => id !== me.id);
   $('dms').innerHTML = others.length ? others.map(([id, u]) =>
-    `<button class="card glass" data-c="${dmId(id)}" data-n="${esc(u)}">${avatar(u, 46, id)}<div><b>${esc(u)}</b><span class="d">Message privé</span></div><span class="chev">${ic('next')}</span></button>`).join('')
+    `<button class="card glass" data-c="${dmId(id)}" data-n="${esc(u)}">${avatar(u, 46, id)}<div><b>${esc(u)}</b><span class="d">Message privé</span></div>${badge(dmId(id))}<span class="chev">${ic('next')}</span></button>`).join('')
     : '<p class="sub">Personne d’autre pour l’instant. Invite tes amis !</p>';
   $('me').innerHTML = `<label style="cursor:pointer;position:relative;display:block">${avatar(n, 68, me.id)}<input type="file" id="photo" accept="image/*" hidden></label>
     <div><b style="font-size:18px">${esc(n)}</b><br><span style="color:var(--dim);font-size:13px">Touche la photo pour la changer</span></div>`;
   $('photo').onchange = e => e.target.files[0] && uploadPhoto(e.target.files[0]);
-  $('newname').value = n;
+  if (document.activeElement !== $('newname')) $('newname').value = n;
   document.querySelectorAll('.card[data-c]').forEach(b => b.onclick = () => openChat(b.dataset.c, b.dataset.n));
 }
 document.querySelectorAll('#tabs button').forEach(b => b.onclick = async () => {
@@ -424,7 +453,14 @@ async function openChat(id, label) {
   $('chat').classList.add('on');
   const { data } = await db.from('messages').select('*').eq('channel', id).order('created_at').limit(200);
   if (!data || !data.length) $('msgs').innerHTML = '<div class="empty">Aucun message.<br>Lance la conversation</div>';
+  msgCache = {}; reacts = {}; setReply(null);
   (data || []).forEach(addMsg);
+  markSeen(id); render();
+  if (data && data.length) {
+    const { data: rs } = await db.from('reactions').select('*').in('message_id', data.map(m => m.id));
+    (rs || []).forEach(r => (reacts[r.message_id] = reacts[r.message_id] || []).push(r));
+    data.forEach(m => rxRender(m.id));
+  }
 }
 const MOVIX = [['Movix : regarder', 'https://movix.online']];
 const LINKS = {
@@ -437,17 +473,80 @@ function showLinks(id) {
   box.innerHTML = l ? l.map(([t, u], k) => `<a href="${u}" target="_blank" rel="noopener">${k ? '' : ic(c[1])}${t}</a>`).join('') : '';
 }
 $('back').onclick = () => $('chat').classList.remove('on');
-function addMsg(m) {
-  const e = $('msgs').querySelector('.empty'); if (e) e.remove();
-  const mine = m.user_id === me.id, d = document.createElement('div');
-  d.className = 'm' + (mine ? ' me' : '');
-  const who = !mine && !channel.startsWith('dm:') ? `<b>${esc(names[m.user_id] || '?')}</b>` : '';
-  const body = m.audio_url ? `<audio controls src="${esc(m.audio_url)}"></audio>` : linkify(m.content || '');
-  const time = new Date(m.created_at || Date.now()).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-  d.innerHTML = `${who}${body}<time>${time}</time>`;
-  $('msgs').append(d); $('msgs').scrollTop = 1e9;
+let replyTo = null, msgCache = {}, reacts = {}, unread = {};
+const seen = JSON.parse(localStorage.getItem('seen') || '{}');
+const base = +localStorage.getItem('seenBase') || (localStorage.setItem('seenBase', Date.now()), Date.now());
+const EMO = ['👍', '😂', '❤️', '🔥', '😮'];
+const badge = c => unread[c] > 0 ? `<span class="badge">${unread[c]}</span>` : '';
+const preview = m => m.content || (m.image_url ? 'Photo' : 'Message vocal');
+function markSeen(c) { seen[c] = Date.now(); unread[c] = 0; localStorage.setItem('seen', JSON.stringify(seen)); }
+async function computeUnread() {
+  const { data } = await db.from('messages').select('channel,user_id,created_at').gt('created_at', new Date(Date.now() - 7 * 864e5).toISOString()).limit(1000);
+  (data || []).forEach(m => { if (m.user_id !== me.id && new Date(m.created_at) > (seen[m.channel] || base)) unread[m.channel] = (unread[m.channel] || 0) + 1; });
+  render();
 }
-async function send(f) { const { error } = await db.from('messages').insert({ channel, ...f }); if (error) alert(error.message); }
+function setReply(m) {
+  replyTo = m; $('replyBar').style.display = m ? 'flex' : 'none';
+  if (m) $('replyTxt').textContent = (names[m.user_id] || '?') + ' : ' + preview(m);
+}
+$('replyX').onclick = () => setReply(null);
+function rxRender(id) {
+  const box = $('rx-' + id); if (!box) return;
+  const g = {}; (reacts[id] || []).forEach(r => (g[r.emoji] = g[r.emoji] || []).push(r.user_id));
+  box.innerHTML = Object.entries(g).map(([e, u]) => `<button class="rc${u.includes(me.id) ? ' mine' : ''}" data-e="${e}">${e} ${u.length}</button>`).join('');
+  box.querySelectorAll('.rc').forEach(b => b.onclick = () => toggleReact(id, b.dataset.e));
+}
+async function toggleReact(id, e) {
+  const l = reacts[id] = reacts[id] || [], i = l.findIndex(r => r.user_id === me.id && r.emoji === e);
+  if (i >= 0) { l.splice(i, 1); rxRender(id); await db.from('reactions').delete().match({ message_id: id, user_id: me.id, emoji: e }); }
+  else { l.push({ user_id: me.id, emoji: e }); rxRender(id); await db.from('reactions').insert({ message_id: id, emoji: e }); }
+}
+async function delMsg(id) {
+  if (!confirm('Supprimer ce message ?')) return;
+  const { error } = await db.from('messages').delete().eq('id', id);
+  if (error) return alert(error.message);
+  const r = $('m-' + id); if (r) r.remove();
+}
+function addMsg(m) {
+  const e0 = $('msgs').querySelector('.empty'); if (e0) e0.remove();
+  if ($('m-' + m.id)) return;
+  msgCache[m.id] = m;
+  const mine = m.user_id === me.id, row = document.createElement('div');
+  row.className = 'row' + (mine ? ' me' : ''); row.id = 'm-' + m.id;
+  const who = !mine && !channel.startsWith('dm:') ? `<b>${esc(names[m.user_id] || '?')}</b>` : '';
+  const rm = m.reply_to && msgCache[m.reply_to];
+  const q = rm ? `<div class="q">${esc(names[rm.user_id] || '?')} : ${esc(preview(rm))}</div>` : '';
+  const body = m.image_url ? `<a href="${esc(m.image_url)}" target="_blank" rel="noopener"><img class="pic" src="${esc(m.image_url)}" alt=""></a>`
+    : m.audio_url ? `<audio controls src="${esc(m.audio_url)}"></audio>` : linkify(m.content || '');
+  const time = new Date(m.created_at || Date.now()).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  row.innerHTML = `${mine ? '' : avatar(names[m.user_id] || '?', 30, m.user_id)}<div class="col"><div class="m${mine ? ' me' : ''}">${who}${q}${body}<time>${time}</time></div><div class="rx" id="rx-${m.id}"></div><div class="act">${EMO.map(x => `<button data-e="${x}">${x}</button>`).join('')}<button data-a="r">Répondre</button>${mine ? '<button data-a="d">Supprimer</button>' : ''}</div></div>`;
+  row.querySelector('.m').onclick = ev => { if (!ev.target.closest('a,audio')) row.classList.toggle('open'); };
+  row.querySelectorAll('.act button').forEach(b => b.onclick = () => {
+    row.classList.remove('open');
+    if (b.dataset.e) toggleReact(m.id, b.dataset.e);
+    else if (b.dataset.a === 'r') { setReply(m); $('text').focus(); }
+    else delMsg(m.id);
+  });
+  $('msgs').append(row); rxRender(m.id); $('msgs').scrollTop = 1e9;
+}
+async function send(f) {
+  const { error } = await db.from('messages').insert({ channel, reply_to: replyTo ? replyTo.id : null, ...f });
+  if (error) alert(error.message); else setReply(null);
+}
+$('imgBtn').onclick = () => $('imgIn').click();
+$('imgIn').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try {
+    const img = await new Promise((ok, ko) => { const i = new Image(); i.onload = () => ok(i); i.onerror = ko; i.src = URL.createObjectURL(f); });
+    const k = Math.min(1, 1280 / Math.max(img.width, img.height)), c = document.createElement('canvas');
+    c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', .82)), path = `${me.id}/${Date.now()}.jpg`;
+    const up = await db.storage.from('images').upload(path, blob, { contentType: 'image/jpeg' });
+    if (up.error) throw up.error;
+    send({ image_url: db.storage.from('images').getPublicUrl(path).data.publicUrl });
+  } catch (err) { alert('Image impossible : ' + (err.message || err)); }
+};
 $('send').onclick = async () => { const t = $('text').value.trim(); if (!t) return; $('text').value = ''; await send({ content: t }); };
 $('text').onkeydown = e => { if (e.key === 'Enter') $('send').click(); };
 
