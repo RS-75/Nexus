@@ -3,6 +3,7 @@
   "short_name": "Nexus",
   "start_url": "./",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#04070f",
   "theme_color": "#04070f",
   "icons": [
