@@ -90,6 +90,20 @@ body{height:var(--h,100dvh);overscroll-behavior:none;position:fixed;inset:0;widt
 .panel h2{font-size:clamp(24px,7.5vw,32px)}
 #app{width:100%}
 @media(min-width:900px){#app{max-width:760px}}
+#call{display:none;position:absolute;inset:0;z-index:12;flex-direction:column;background:#04070f}
+#call.on{display:flex}
+#grid{flex:1;min-height:0;display:grid;gap:8px;padding:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr));grid-auto-rows:1fr}
+.tile{position:relative;border-radius:18px;overflow:hidden;background:#0a1228;border:1px solid var(--line);cursor:pointer}
+.tile video{width:100%;height:100%;object-fit:cover;display:block}
+.tile.fit video{object-fit:contain;background:#000}.tile.mirror video{transform:scaleX(-1)}
+.tile.novid video{opacity:0}.ph{position:absolute;inset:0;display:none;place-items:center}.novid .ph{display:grid}
+.nm{position:absolute;left:10px;bottom:8px;font-size:12px;background:rgba(0,0,0,.55);padding:3px 10px;border-radius:10px}
+#ctl{display:flex;justify-content:center;gap:14px;padding:12px 12px 16px}
+.cb{width:56px;height:56px;border-radius:50%;border:1px solid var(--line);background:rgba(30,50,100,.55);cursor:pointer;display:grid;place-items:center}
+.cb .i{width:24px;height:24px}.cb.act{background:linear-gradient(135deg,#2563eb,#38bdf8);border:0}
+.cb.mute{background:rgba(220,38,38,.45)}.cb.end{background:#dc2626;border:0}.cb.end .i{transform:rotate(135deg)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:18px 0;color:var(--dim)}
+.chip{padding:6px 12px;border-radius:20px;background:rgba(59,130,246,.22);border:1px solid var(--line);color:var(--txt);font-size:14px}
 </style>
 </head>
 <body>
@@ -111,8 +125,10 @@ body{height:var(--h,100dvh);overscroll-behavior:none;position:fixed;inset:0;widt
 <div id="app">
   <section class="panel on" id="p-salons"><h2 id="hello">Salons</h2><p class="sub">Choisis où discuter</p><div id="channels"></div></section>
   <section class="panel" id="p-prive"><h2>Privé</h2><p class="sub">Discussions entre vous deux</p><div id="dms"></div></section>
-  <section class="panel" id="p-appel"><div class="hero"><div class="ico" data-i="phone"></div><h2>Appels vocaux</h2>
-    <p>Parler en direct avec tes amis.<br>Bientôt disponible.</p></div></section>
+  <section class="panel" id="p-appel"><div class="hero"><div class="ico" data-i="phone"></div><h2>Appel</h2>
+    <p>Voix, vidéo et partage d’écran avec vos amis.</p>
+    <div class="chips" id="who"></div><button class="btn" id="joinBtn">Rejoindre l’appel</button>
+    <p id="note" style="font-size:13px"></p></div></section>
   <section class="panel" id="p-reglages"><h2>Réglages</h2><p class="sub">Ton profil</p>
     <div class="glass set"><div id="me" style="display:flex;align-items:center;gap:14px"></div>
       <label for="newname">Changer de pseudo</label><input id="newname" maxlength="20">
@@ -136,6 +152,11 @@ body{height:var(--h,100dvh);overscroll-behavior:none;position:fixed;inset:0;widt
       <button class="btn round" id="send" data-i="send"></button>
     </div>
   </div>
+  <div id="call"><div id="grid"></div><div id="ctl">
+    <button class="cb" id="cMic" data-i="mic" title="Micro"></button>
+    <button class="cb" id="cCam" data-i="video" title="Caméra"></button>
+    <button class="cb" id="cScr" data-i="screen" title="Partager l’écran"></button>
+    <button class="cb end" id="cEnd" data-i="phone" title="Quitter"></button></div></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
@@ -157,7 +178,9 @@ const IC = {
  mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/>',
  send:'<path d="M21 3L10 14M21 3l-7 18-4-7-7-4z"/>',
  back:'<path d="M15 5l-7 7 7 7"/>', next:'<path d="M9 5l7 7-7 7"/>',
- logout:'<path d="M9 4H5v16h4M16 8l4 4-4 4M20 12H9"/>'
+ logout:'<path d="M9 4H5v16h4M16 8l4 4-4 4M20 12H9"/>',
+ video:'<rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/>',
+ screen:'<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>'
 };
 const ic = n => `<svg class="i" viewBox="0 0 24 24">${IC[n]}</svg>`;
 document.querySelectorAll('[data-i]').forEach(e => e.insertAdjacentHTML('afterbegin', ic(e.dataset.i)));
@@ -220,7 +243,7 @@ async function start(user) {
   if (me && me.id === user.id) return;
   me = user;
   $('auth').style.display = 'none'; $('app').style.display = 'flex';
-  await loadProfiles(); render();
+  await loadProfiles(); render(); if (!cch) setupCall();
   db.channel('live').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, p => {
     if ($('chat').classList.contains('on') && p.new.channel === channel) addMsg(p.new);
   }).subscribe();
@@ -253,6 +276,124 @@ $('saveName').onclick = async () => {
   if (error) return alert(error.message);
   names[me.id] = u; render(); alert('Pseudo mis à jour ✓');
 };
+
+// --- Appels (WebRTC, signalisation via Supabase Realtime) ---
+// Pour de meilleurs résultats en 4G/5G, ajoute ici un serveur TURN.
+const ICE = [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }];
+let cch, inCall = false, peers = {}, aTrack = null, camTrack = null, scrTrack = null, vTrack = null;
+const localView = new MediaStream();
+const sig = (to, type, data) => cch.send({ type: 'broadcast', event: 'sig', payload: { to, from: me.id, type, data } });
+
+function setupCall() {
+  cch = db.channel('call', { config: { presence: { key: me.id } } });
+  cch.on('presence', { event: 'sync' }, callSync)
+     .on('presence', { event: 'leave' }, ({ key }) => dropPeer(key))
+     .on('broadcast', { event: 'sig' }, ({ payload }) => onSig(payload))
+     .subscribe();
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+    $('cScr').style.display = 'none';
+    $('note').textContent = 'Le partage d’écran n’est pas disponible sur iPhone, mais tu peux voir celui des autres.';
+  }
+}
+function callSync() {
+  const st = cch.presenceState(), ids = Object.keys(st);
+  $('who').innerHTML = ids.length ? ids.map(id => `<span class="chip">${esc(st[id][0].name)}</span>`).join('') : 'Personne dans l’appel';
+}
+function mkPeer(id) {
+  if (peers[id]) return peers[id];
+  const pc = new RTCPeerConnection({ iceServers: ICE }), p = peers[id] = { pc, pending: [], stream: new MediaStream() };
+  pc.onicecandidate = e => e.candidate && sig(id, 'ice', e.candidate);
+  pc.ontrack = e => {
+    p.stream.addTrack(e.track);
+    const t = addTile(id, names[id]); t.querySelector('video').srcObject = p.stream;
+    if (e.track.kind === 'video') {
+      const f = () => t.classList.toggle('novid', e.track.muted);
+      e.track.onmute = f; e.track.onunmute = f; f();
+    }
+  };
+  pc.onconnectionstatechange = () => { if (pc.connectionState === 'failed') pc.restartIce && pc.restartIce(); };
+  return p;
+}
+function attach(pc) {
+  pc.getTransceivers().forEach(t => { t.direction = 'sendrecv'; t.sender.replaceTrack(t.receiver.track.kind === 'audio' ? aTrack : vTrack); });
+}
+async function connectTo(id) {
+  const { pc } = mkPeer(id);
+  pc.addTransceiver('audio'); pc.addTransceiver('video'); attach(pc);
+  await pc.setLocalDescription(await pc.createOffer());
+  sig(id, 'offer', pc.localDescription);
+}
+const flush = p => p.pending.splice(0).forEach(c => p.pc.addIceCandidate(c).catch(() => {}));
+async function onSig({ to, from, type, data }) {
+  if (to !== me.id || !inCall) return;
+  const p = mkPeer(from), pc = p.pc;
+  try {
+    if (type === 'offer') {
+      if (pc.signalingState !== 'stable') { if (me.id < from) return; await pc.setLocalDescription({ type: 'rollback' }); }
+      await pc.setRemoteDescription(data); attach(pc);
+      await pc.setLocalDescription(await pc.createAnswer());
+      sig(from, 'answer', pc.localDescription); flush(p);
+    } else if (type === 'answer') { await pc.setRemoteDescription(data); flush(p); }
+    else if (type === 'ice') { pc.remoteDescription ? await pc.addIceCandidate(data) : p.pending.push(data); }
+  } catch (e) { console.warn(e); }
+}
+function dropPeer(id) {
+  if (peers[id]) { peers[id].pc.close(); delete peers[id]; }
+  const t = $('t-' + id); if (t) t.remove();
+}
+function addTile(id, name, local) {
+  let t = $('t-' + id); if (t) return t;
+  t = document.createElement('div'); t.id = 't-' + id; t.className = 'tile novid';
+  t.innerHTML = `<video autoplay playsinline ${local ? 'muted' : ''}></video><div class="ph">${avatar(name || '?', 72, id)}</div><span class="nm">${esc(name || '?')}${local ? ' (toi)' : ''}</span>`;
+  t.onclick = () => t.classList.toggle('fit');
+  $('grid').append(t);
+  if (local) t.querySelector('video').srcObject = localView;
+  return t;
+}
+function setVideo(track) {
+  vTrack = track;
+  localView.getVideoTracks().forEach(t => localView.removeTrack(t));
+  if (track) localView.addTrack(track);
+  const me_t = $('t-' + me.id);
+  if (me_t) { me_t.classList.toggle('novid', !track); me_t.classList.toggle('mirror', !!track && track === camTrack); }
+  Object.values(peers).forEach(p => p.pc.getTransceivers().forEach(t => t.receiver.track.kind === 'video' && t.sender.replaceTrack(track)));
+  updBtns();
+}
+function updBtns() {
+  $('cCam').classList.toggle('act', !!camTrack); $('cScr').classList.toggle('act', !!scrTrack);
+  $('cMic').classList.toggle('mute', !aTrack || !aTrack.enabled);
+}
+async function joinCall() {
+  if (inCall) return;
+  try { aTrack = (await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } })).getAudioTracks()[0]; }
+  catch { aTrack = null; alert('Micro non autorisé : tu pourras écouter mais pas parler.'); }
+  inCall = true; $('call').classList.add('on'); addTile(me.id, names[me.id], true); updBtns();
+  await cch.track({ name: names[me.id] || '?' });
+  Object.keys(cch.presenceState()).filter(id => id !== me.id).forEach(connectTo);
+}
+async function leaveCall() {
+  inCall = false; Object.keys(peers).forEach(dropPeer);
+  [aTrack, camTrack, scrTrack].forEach(t => t && t.stop());
+  aTrack = camTrack = scrTrack = vTrack = null;
+  localView.getTracks().forEach(t => localView.removeTrack(t));
+  await cch.untrack(); $('grid').innerHTML = ''; $('call').classList.remove('on');
+}
+async function toggleCam() {
+  if (camTrack) { camTrack.stop(); camTrack = null; if (!scrTrack) setVideo(null); return updBtns(); }
+  try {
+    camTrack = (await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 1280 } } })).getVideoTracks()[0];
+    if (!scrTrack) setVideo(camTrack); updBtns();
+  } catch { alert('Caméra non autorisée.'); }
+}
+async function toggleScreen() {
+  if (scrTrack) { scrTrack.stop(); return endScreen(); }
+  try { scrTrack = (await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false })).getVideoTracks()[0]; scrTrack.onended = endScreen; setVideo(scrTrack); }
+  catch {}
+}
+function endScreen() { scrTrack = null; setVideo(camTrack); }
+$('joinBtn').onclick = joinCall; $('cEnd').onclick = leaveCall; $('cCam').onclick = toggleCam; $('cScr').onclick = toggleScreen;
+$('cMic').onclick = () => { if (aTrack) aTrack.enabled = !aTrack.enabled; updBtns(); };
+addEventListener('pagehide', () => inCall && leaveCall());
 
 async function uploadPhoto(file) {
   try {
