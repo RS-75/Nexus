@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#04070f">
 <title>Nexus</title>
 <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -15,7 +15,7 @@
 <style>
 :root{--bg:#04070f;--glass:rgba(16,28,60,.55);--line:rgba(130,175,255,.16);--blue:#3b82f6;--txt:#f1f6ff;--dim:#93a8d0}
 *{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%}
+html,body{height:100%;touch-action:manipulation;-webkit-text-size-adjust:100%}
 body{font-family:-apple-system,"SF Pro Text",system-ui,sans-serif;color:var(--txt);background:var(--bg);overflow:hidden;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
 body::before,body::after{content:"";position:fixed;width:55vmax;height:55vmax;border-radius:50%;filter:blur(100px);z-index:-1}
 body::before{background:#1d4ed8;top:-25vmax;left:-20vmax;opacity:.5}
@@ -80,6 +80,11 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.25)}
 #back .i{width:26px;height:26px}.round .i{width:20px;height:20px}
 .chev{margin-left:auto;color:var(--dim)}.chev .i{width:18px;height:18px}
 .danger{display:flex;align-items:center;justify-content:center;gap:8px}
+.deals{display:none;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);background:rgba(37,99,235,.12);align-items:center;overflow-x:auto}
+.deals.on{display:flex}
+.deals a{flex:none;text-decoration:none;color:#fff;font-size:14px;font-weight:600;padding:9px 14px;border-radius:12px;background:rgba(59,130,246,.28);border:1px solid var(--line);display:flex;align-items:center;gap:7px}
+.deals a:first-child{background:linear-gradient(135deg,#2563eb,#38bdf8);border:0}
+.deals .i{width:18px;height:18px}
 </style>
 </head>
 <body>
@@ -118,6 +123,7 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.25)}
 
   <div id="chat">
     <div id="head"><button id="back" data-i="back"></button><span id="title"></span></div>
+    <div class="deals" id="deals"></div>
     <div id="msgs"></div>
     <div id="bar">
       <button class="round" id="mic" title="Message vocal" data-i="mic"></button>
@@ -150,13 +156,17 @@ const IC = {
 };
 const ic = n => `<svg class="i" viewBox="0 0 24 24">${IC[n]}</svg>`;
 document.querySelectorAll('[data-i]').forEach(e => e.insertAdjacentHTML('afterbegin', ic(e.dataset.i)));
-let me, names = {}, channel = 'general', signup = false, rec, chunks = [];
+let me, names = {}, pics = {}, channel = 'general', signup = false, rec, chunks = [];
 
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const linkify = s => esc(s).replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
 const dmId = o => 'dm:' + [me.id, o].sort().join(':');
 const hue = n => 190 + ([...n].reduce((a, c) => a + c.charCodeAt(0), 0) % 70);
-const avatar = (n, s = 46) => `<div class="ico av" style="width:${s}px;height:${s}px;background:linear-gradient(135deg,hsl(${hue(n)} 85% 45%),hsl(${hue(n) + 30} 90% 62%))">${esc(n[0] || '?').toUpperCase()}</div>`;
+const avatar = (n, s = 46, id) => pics[id]
+  ? `<img class="ico av" style="width:${s}px;height:${s}px;object-fit:cover;padding:0" src="${esc(pics[id])}" alt="">`
+  : `<div class="ico av" style="width:${s}px;height:${s}px;background:linear-gradient(135deg,hsl(${hue(n)} 85% 45%),hsl(${hue(n) + 30} 90% 62%))">${esc(n[0] || '?').toUpperCase()}</div>`;
+
+document.addEventListener('gesturestart', e => e.preventDefault());
 
 // Chargement
 const t0 = Date.now(); let splashDone = false;
@@ -193,7 +203,7 @@ db.auth.onAuthStateChange((_, session) => {
 
 async function loadProfiles() {
   const { data } = await db.from('profiles').select('*');
-  (data || []).forEach(p => names[p.id] = p.username);
+  (data || []).forEach(p => { names[p.id] = p.username; if (p.avatar_url) pics[p.id] = p.avatar_url; });
 }
 async function start(user) {
   if (me && me.id === user.id) return;
@@ -213,9 +223,11 @@ function render() {
     `<button class="card glass" data-c="${id}" data-n="${t}"><div class="ico">${ic(i)}</div><div><b>${t}</b><span class="d">${d}</span></div><span class="chev">${ic('next')}</span></button>`).join('');
   const others = Object.entries(names).filter(([id]) => id !== me.id);
   $('dms').innerHTML = others.length ? others.map(([id, u]) =>
-    `<button class="card glass" data-c="${dmId(id)}" data-n="${esc(u)}">${avatar(u)}<div><b>${esc(u)}</b><span class="d">Message privé</span></div><span class="chev">${ic('next')}</span></button>`).join('')
+    `<button class="card glass" data-c="${dmId(id)}" data-n="${esc(u)}">${avatar(u, 46, id)}<div><b>${esc(u)}</b><span class="d">Message privé</span></div><span class="chev">${ic('next')}</span></button>`).join('')
     : '<p class="sub">Personne d’autre pour l’instant. Invite tes amis !</p>';
-  $('me').innerHTML = avatar(n, 56) + `<b style="font-size:18px">${esc(n)}</b>`;
+  $('me').innerHTML = `<label style="cursor:pointer;position:relative;display:block">${avatar(n, 68, me.id)}<input type="file" id="photo" accept="image/*" hidden></label>
+    <div><b style="font-size:18px">${esc(n)}</b><br><span style="color:var(--dim);font-size:13px">Touche la photo pour la changer</span></div>`;
+  $('photo').onchange = e => e.target.files[0] && uploadPhoto(e.target.files[0]);
   $('newname').value = n;
   document.querySelectorAll('.card[data-c]').forEach(b => b.onclick = () => openChat(b.dataset.c, b.dataset.n));
 }
@@ -231,13 +243,40 @@ $('saveName').onclick = async () => {
   names[me.id] = u; render(); alert('Pseudo mis à jour ✓');
 };
 
+async function uploadPhoto(file) {
+  try {
+    const img = await new Promise((ok, ko) => { const i = new Image(); i.onload = () => ok(i); i.onerror = ko; i.src = URL.createObjectURL(file); });
+    const c = document.createElement('canvas'); c.width = c.height = 256;
+    const m = Math.min(img.width, img.height);
+    c.getContext('2d').drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, 256, 256);
+    const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', .85));
+    const path = `${me.id}/avatar.jpg`;
+    const up = await db.storage.from('avatars').upload(path, blob, { contentType: 'image/jpeg', upsert: true });
+    if (up.error) throw up.error;
+    const url = db.storage.from('avatars').getPublicUrl(path).data.publicUrl + '?v=' + Date.now();
+    const { error } = await db.from('profiles').update({ avatar_url: url }).eq('id', me.id);
+    if (error) throw error;
+    pics[me.id] = url; render();
+  } catch (e) { alert('Photo impossible : ' + (e.message || e)); }
+}
+
 // Conversation
 async function openChat(id, label) {
-  channel = id; $('title').textContent = label; $('msgs').innerHTML = '';
+  channel = id; $('title').textContent = label; showLinks(id); $('msgs').innerHTML = '';
   $('chat').classList.add('on');
   const { data } = await db.from('messages').select('*').eq('channel', id).order('created_at').limit(200);
   if (!data || !data.length) $('msgs').innerHTML = '<div class="empty">Aucun message.<br>Lance la conversation</div>';
   (data || []).forEach(addMsg);
+}
+const MOVIX = [['Movix : regarder', 'https://movix.online']];
+const LINKS = {
+  'bons-plans': [['Dealabs : voir les deals', 'https://www.dealabs.com/'], ['Catégories', 'https://www.dealabs.com/groupe']],
+  films: MOVIX, series: MOVIX
+};
+function showLinks(id) {
+  const l = LINKS[id], c = CHANNELS.find(c => c[0] === id), box = $('deals');
+  box.classList.toggle('on', !!l);
+  box.innerHTML = l ? l.map(([t, u], k) => `<a href="${u}" target="_blank" rel="noopener">${k ? '' : ic(c[1])}${t}</a>`).join('') : '';
 }
 $('back').onclick = () => $('chat').classList.remove('on');
 function addMsg(m) {
