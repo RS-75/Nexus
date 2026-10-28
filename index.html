@@ -229,16 +229,20 @@ const vv = window.visualViewport;
 function diag() {
   const d = $('diag'); if (!d) return;
   const inst = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
-  d.textContent = `Diagnostic : ${inst ? 'appli installée' : 'navigateur'} · écran ${screen.width}×${screen.height} · fenêtre ${innerWidth}×${innerHeight} · marge basse ${$('probe').offsetHeight}px`;
+  d.textContent = `Diagnostic : ${inst ? 'appli installée' : 'navigateur'} · écran ${screen.width}×${screen.height} · fenêtre ${innerWidth}×${innerHeight} · marge basse ${$('probe').offsetHeight}px · appli ${document.body.offsetHeight}px`;
 }
 function fit() {
-  diag();
   const r = document.documentElement, kb = vv && innerHeight - vv.height > 120;
+  // iOS (appli installée) : la fenêtre peut être calculée trop courte au lancement -> on force la vraie hauteur d'écran
+  const full = navigator.standalone && matchMedia('(orientation: portrait)').matches ? screen.height : 0;
   r.classList.toggle('kb', !!kb);
-  if (kb) r.style.setProperty('--h', vv.height + 'px'); else r.style.removeProperty('--h');
-  window.scrollTo(0, 0);
+  if (kb) r.style.setProperty('--h', vv.height + 'px');
+  else if (full > innerHeight + 4) r.style.setProperty('--h', full + 'px');
+  else r.style.removeProperty('--h');
+  window.scrollTo(0, 0); diag();
 }
-fit(); addEventListener('resize', fit); addEventListener('orientationchange', fit);
+fit(); setTimeout(fit, 300); setTimeout(fit, 1200);
+addEventListener('resize', fit); addEventListener('orientationchange', fit); addEventListener('pageshow', fit);
 if (vv) { vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); }
 document.addEventListener('focusin', () => setTimeout(fit, 100));
 
