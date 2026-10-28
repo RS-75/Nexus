@@ -48,7 +48,7 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.25)}
 .ico{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;font-size:22px;flex:none;background:linear-gradient(135deg,rgba(37,99,235,.55),rgba(56,189,248,.25));border:1px solid var(--line)}
 .av{border-radius:50%;font-weight:700;font-size:18px}
 /* tab bar */
-#tabs{position:absolute;left:0;right:0;bottom:0;display:flex;padding:8px 10px max(10px,calc(env(safe-area-inset-bottom) - 8px));gap:4px;z-index:5;border-radius:24px 24px 0 0;border-bottom:0;background:rgba(24,48,110,.5)}
+#tabs{position:absolute;left:0;right:0;bottom:0;display:flex;padding:8px 10px max(10px,calc(env(safe-area-inset-bottom) - 8px - var(--gap,0px)));gap:4px;z-index:5;border-radius:24px 24px 0 0;border-bottom:0;background:#162b63}
 #tabs button{flex:1;background:none;border:0;border-radius:18px;padding:8px 0 6px;color:var(--dim);display:grid;justify-items:center;gap:3px;font-size:11px;cursor:pointer;transition:.2s}
 #tabs button svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 #tabs button.on{color:#fff;background:rgba(59,130,246,.28);box-shadow:0 0 22px rgba(59,130,246,.35)}
@@ -85,7 +85,7 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.25)}
 .deals a{flex:none;text-decoration:none;color:#fff;font-size:14px;font-weight:600;padding:9px 14px;border-radius:12px;background:rgba(59,130,246,.28);border:1px solid var(--line);display:flex;align-items:center;gap:7px}
 .deals a:first-child{background:linear-gradient(135deg,#2563eb,#38bdf8);border:0}
 .deals .i{width:18px;height:18px}
-html{background:radial-gradient(90% 45% at 50% 100%,rgba(29,78,216,.5),transparent 70%) fixed,var(--bg)}
+html{background:#162b63}
 body{height:var(--h,auto);overscroll-behavior:none;position:fixed;inset:0;width:100%}
 .panel h2{font-size:clamp(24px,7.5vw,32px)}
 #app{width:100%}
@@ -235,14 +235,17 @@ function diag() {
   const inst = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
   d.textContent = `Diagnostic : ${inst ? 'appli installée' : 'navigateur'} · écran ${screen.width}×${screen.height} · fenêtre ${innerWidth}×${innerHeight} · marge basse ${$('probe').offsetHeight}px · appli ${document.body.offsetHeight}px`;
 }
+function gapColor() {
+  const ov = $('chat').classList.contains('on') || $('call').classList.contains('on');
+  document.documentElement.style.background = ov ? '#050914' : '#162b63';
+}
 function fit() {
   const r = document.documentElement, kb = vv && innerHeight - vv.height > 120;
-  // iOS (appli installée) : la fenêtre peut être calculée trop courte au lancement -> on force la vraie hauteur d'écran
+  // iOS (appli installée) : si la fenêtre est plus courte que l'écran, on mesure le trou pour le combler
   const full = navigator.standalone && matchMedia('(orientation: portrait)').matches ? screen.height : 0;
   r.classList.toggle('kb', !!kb);
-  if (kb) r.style.setProperty('--h', vv.height + 'px');
-  else if (full > innerHeight + 4) r.style.setProperty('--h', full + 'px');
-  else r.style.removeProperty('--h');
+  r.style.setProperty('--gap', (!kb && full > innerHeight + 4 ? full - innerHeight : 0) + 'px');
+  if (kb) r.style.setProperty('--h', vv.height + 'px'); else r.style.removeProperty('--h');
   window.scrollTo(0, 0); diag();
 }
 fit(); setTimeout(fit, 300); setTimeout(fit, 1200);
@@ -446,7 +449,7 @@ async function joinCall() {
   if (inCall) return;
   try { aTrack = (await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } })).getAudioTracks()[0]; }
   catch { aTrack = null; alert('Micro non autorisé : tu pourras écouter mais pas parler.'); }
-  inCall = true; $('call').classList.add('on'); addTile(me.id, names[me.id], true); updBtns();
+  inCall = true; $('call').classList.add('on'); gapColor(); addTile(me.id, names[me.id], true); updBtns();
   await cch.track({ name: names[me.id] || '?' });
   Object.keys(cch.presenceState()).filter(id => id !== me.id).forEach(connectTo);
 }
@@ -455,7 +458,7 @@ async function leaveCall() {
   [aTrack, camTrack, scrTrack].forEach(t => t && t.stop());
   aTrack = camTrack = scrTrack = vTrack = null;
   localView.getTracks().forEach(t => localView.removeTrack(t));
-  await cch.untrack(); $('grid').innerHTML = ''; $('call').classList.remove('on');
+  await cch.untrack(); $('grid').innerHTML = ''; $('call').classList.remove('on'); gapColor();
 }
 async function toggleCam() {
   if (camTrack) { camTrack.stop(); camTrack = null; if (!scrTrack) setVideo(null); return updBtns(); }
@@ -494,7 +497,7 @@ async function uploadPhoto(file) {
 // Conversation
 async function openChat(id, label) {
   channel = id; $('title').textContent = label; showLinks(id); $('msgs').innerHTML = '';
-  $('chat').classList.add('on');
+  $('chat').classList.add('on'); gapColor();
   const { data } = await db.from('messages').select('*').eq('channel', id).order('created_at').limit(200);
   if (!data || !data.length) $('msgs').innerHTML = '<div class="empty">Aucun message.<br>Lance la conversation</div>';
   msgCache = {}; reacts = {}; setReply(null);
@@ -516,7 +519,7 @@ function showLinks(id) {
   box.classList.toggle('on', !!l);
   box.innerHTML = l ? l.map(([t, u], k) => `<a href="${u}" target="_blank" rel="noopener">${k ? '' : ic(c[1])}${t}</a>`).join('') : '';
 }
-$('back').onclick = () => $('chat').classList.remove('on');
+$('back').onclick = () => { $('chat').classList.remove('on'); gapColor(); };
 const EMO_RE = /\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*/gu;
 const twem = h => h.split(/(<[^>]+>)/).map(x => x[0] === '<' ? x : x.replace(EMO_RE, emo)).join('');
 const ytId = t => (t.match(/(?:youtube\.com\/(?:watch\?(?:[^\s]*&)?v=|shorts\/|embed\/)|youtu\.be\/)([\w-]{11})/) || [])[1];
