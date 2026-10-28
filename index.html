@@ -142,6 +142,7 @@ body{background:radial-gradient(80% 40% at 50% 100%,rgba(29,78,216,.38),transpar
 #tabs button{font-size:10.5px}
 .kb body{transform:translateY(var(--vt,0px))}
 #shows .set{margin-bottom:10px}
+#pushAsk{display:none;position:fixed;inset:0;z-index:55;background:rgba(2,5,12,.78);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);place-items:center;padding:18px}#pushAsk.on{display:grid}
 </style>
 </head>
 <body>
@@ -219,6 +220,9 @@ body{background:radial-gradient(80% 40% at 50% 100%,rgba(29,78,216,.38),transpar
     <h3>Astuces d’écriture</h3><p><code>||texte||</code> floute un spoil (on touche pour le lire). <code>**gras**</code>, <code>*italique*</code>, <code>`code`</code>. Commandes : <code>/dé</code>, <code>/pile</code>, <code>/tirage a, b, c</code>. Le micro envoie un vocal, l’icône image une photo.</p>
     <h3>Installer l’appli</h3><p>Dans Safari : bouton Partager, puis « Sur l’écran d’accueil ».</p>
     <button class="btn" id="gok" style="width:100%;margin-top:18px">Compris</button></div></div>
+  <div id="pushAsk"><div class="glass gbox"><h2>Activer les notifications ?</h2><p>Reçois une alerte à chaque nouveau message, même quand l’appli est fermée. Tu pourras changer ça plus tard dans Réglages.</p>
+    <button class="btn" id="pushYes" style="width:100%;margin-top:18px">Activer</button>
+    <button id="pushNo" style="width:100%;margin-top:10px;background:none;border:1px solid var(--line);border-radius:14px;padding:13px;color:var(--dim);cursor:pointer">Plus tard</button></div></div>
   <div id="call"><button class="btn" id="snd" style="display:none;margin:10px 12px 0">Toucher pour activer le son</button><div id="grid"></div><div id="ctl">
     <button class="cb" id="cMin" data-i="down" title="Réduire"></button>
     <button class="cb" id="cMic" data-i="mic" title="Micro"></button>
@@ -604,7 +608,7 @@ function toast(txt, fn) {
   setTimeout(() => t.style.display = 'none', 8000);
 }
 $('guideBtn').onclick = () => $('guide').classList.add('on');
-$('gok').onclick = () => { localStorage.setItem('guideSeen', '1'); $('guide').classList.remove('on'); };
+$('gok').onclick = () => { localStorage.setItem('guideSeen', '1'); $('guide').classList.remove('on'); askPush(); };
 $('cMin').onclick = () => { $('call').classList.add('min'); $('pill').style.display = 'block'; };
 $('pill').onclick = () => { $('call').classList.remove('min'); $('pill').style.display = 'none'; };
 
@@ -883,7 +887,15 @@ $('pushBtn').onclick = async () => { if ($('pushBtn').dataset.on) { await dropPu
 async function initPush() {
   await pushRefresh();
   if (pushOk && Notification.permission === 'granted') { const sub = await pushSub(); if (sub) saveSub(sub); }
+  askPush();
 }
+// Proposition unique à l'ouverture : on ne redemande plus ensuite (réglable dans Réglages)
+function askPush() {
+  if (!pushOk || localStorage.getItem('pushAsked') || Notification.permission !== 'default' || $('guide').classList.contains('on')) return;
+  setTimeout(() => $('pushAsk').classList.add('on'), 800);
+}
+$('pushYes').onclick = () => { localStorage.setItem('pushAsked', '1'); $('pushAsk').classList.remove('on'); enablePush(); };
+$('pushNo').onclick = () => { localStorage.setItem('pushAsked', '1'); $('pushAsk').classList.remove('on'); };
 </script>
 </body>
 </html>
