@@ -380,31 +380,44 @@ $('saveName').onclick = async () => {
 };
 
 // --- Appels (WebRTC, signalisation via Supabase Realtime) ---
-// Pour de meilleurs résultats en 4G/5G, ajoute ici un serveur TURN.
+// Serveurs TURN (relais) : indispensables en 4G/5G ou entre deux réseaux différents.
+// Ceux d'Open Relay sont publics et limités : pour un usage fiable, crée un compte gratuit
+// sur metered.ca et remplace-les par les tiens.
 const TURN = [
-  // Colle ici les serveurs TURN de ton compte gratuit metered.ca, par exemple :
-  // { urls: 'turn:standard.relay.metered.ca:443', username: '...', credential: '...' },
-  // { urls: 'turns:standard.relay.metered.ca:443?transport=tcp', username: '...', credential: '...' },
+  { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+  { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
+  { urls: 'turns:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' },
 ];
 const ICE = [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }, ...TURN];
-let cch, inCall = false, peers = {}, aTrack = null, camTrack = null, scrTrack = null, vTrack = null;
+// Identifiant unique par onglet/appareil : permet aussi d'appeler depuis 2 appareils avec le même compte.
+const SID = Math.random().toString(36).slice(2, 10);
+let cch, cready = false, cstate = '', inCall = false, peers = {}, pinfo = {}, aTrack = null, camTrack = null, scrTrack = null, vTrack = null;
 const localView = new MediaStream();
-const sig = (to, type, data) => cch.send({ type: 'broadcast', event: 'sig', payload: { to, from: me.id, type, data } });
-
+const sig = (to, type, data) => cch.send({ type: 'broadcast', event: 'sig', payload: { to, from: SID, type, data } });
+const noScreen = !(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
+function setNote() {
+  $('note').textContent = !cready ? (cstate && cstate !== 'SUBSCRIBED' && cstate !== 'JOINING' ? 'Service d’appel indisponible (' + cstate + '). Vérifie que Realtime est activé dans Supabase.' : 'Connexion au service d’appel…')
+    : noScreen ? 'Le partage d’écran n’est pas disponible sur iPhone, mais tu peux voir celui des autres.' : '';
+}
 function setupCall() {
-  cch = db.channel('call', { config: { presence: { key: me.id } } });
+  cch = db.channel('call', { config: { presence: { key: SID }, broadcast: { self: false } } });
   cch.on('presence', { event: 'sync' }, callSync)
      .on('presence', { event: 'leave' }, ({ key }) => dropPeer(key))
      .on('broadcast', { event: 'sig' }, ({ payload }) => onSig(payload))
-     .subscribe();
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
-    $('cScr').style.display = 'none';
-    $('note').textContent = 'Le partage d’écran n’est pas disponible sur iPhone, mais tu peux voir celui des autres.';
-  }
+     .subscribe(st => { cstate = st; cready = st === 'SUBSCRIBED'; setNote(); });
+  if (noScreen) $('cScr').style.display = 'none';
+  setNote();
 }
 function callSync() {
   const st = cch.presenceState(), ids = Object.keys(st);
-  $('who').innerHTML = ids.length ? ids.map(id => `<span class="chip">${esc(st[id][0].name)}</span>`).join('') : 'Personne dans l’appel';
+  pinfo = {}; ids.forEach(id => pinfo[id] = st[id][0]);
+  $('who').innerHTML = ids.length ? ids.map(id => `<span class="chip">${esc(pinfo[id].name || '?')}${id === SID ? ' (toi)' : ''}</span>`).join('') : 'Personne dans l’appel';
+  if (!inCall) return;
+  ids.filter(id => id !== SID).forEach(id => {
+    addTile(id, pinfo[id].name, false, pinfo[id].uid);
+    // Règle déterministe (pas de collision) : le plus grand identifiant envoie l'offre
+    if (!peers[id] && SID > id) connectTo(id);
+  });
 }
 function playStream(t, stream) {
   const v = t.querySelector('video'), a = t.querySelector('audio');
@@ -413,58 +426,69 @@ function playStream(t, stream) {
 }
 function setSt(id, st) {
   const t = $('t-' + id), b = t && t.querySelector('.st'); if (!b) return;
-  const m = { new: 'Connexion…', checking: 'Connexion…', disconnected: 'Connexion perdue…', failed: 'Échec : réseau bloqué (serveur TURN requis)' };
+  const m = { new: 'Connexion…', checking: 'Connexion…', disconnected: 'Connexion perdue…', failed: 'Échec de connexion réseau' };
   b.textContent = m[st] || ''; b.style.display = m[st] ? 'block' : 'none';
 }
 $('snd').onclick = () => { document.querySelectorAll('#grid audio').forEach(a => a.play()); $('snd').style.display = 'none'; };
 function mkPeer(id) {
   if (peers[id]) return peers[id];
   const pc = new RTCPeerConnection({ iceServers: ICE }), p = peers[id] = { pc, pending: [], stream: new MediaStream() };
-  addTile(id, names[id]); setSt(id, 'checking');
-  pc.onicecandidate = e => e.candidate && sig(id, 'ice', e.candidate);
+  const inf = pinfo[id] || {};
+  addTile(id, inf.name, false, inf.uid); setSt(id, 'checking');
+  pc.onicecandidate = e => e.candidate && sig(id, 'ice', e.candidate.toJSON ? e.candidate.toJSON() : e.candidate);
   pc.ontrack = e => {
     p.stream.addTrack(e.track);
-    const t = addTile(id, names[id]); playStream(t, p.stream);
+    const t = addTile(id, inf.name, false, inf.uid); playStream(t, p.stream);
     if (e.track.kind === 'video') {
       const f = () => t.classList.toggle('novid', e.track.muted);
       e.track.onmute = f; e.track.onunmute = f; f();
     }
   };
-  pc.oniceconnectionstatechange = () => setSt(id, pc.iceConnectionState);
-  pc.onconnectionstatechange = () => { if (pc.connectionState === 'failed') pc.restartIce && pc.restartIce(); };
+  pc.oniceconnectionstatechange = () => setSt(id, pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed' ? '' : pc.iceConnectionState);
+  pc.onconnectionstatechange = () => {
+    if (pc.connectionState === 'failed') {
+      const was = id; dropPeer(was, true);
+      setTimeout(() => { if (inCall && pinfo[was]) { addTile(was, pinfo[was].name, false, pinfo[was].uid); setSt(was, 'failed'); if (SID > was) connectTo(was); } }, 1500);
+    }
+  };
   return p;
 }
 function attach(pc) {
-  pc.getTransceivers().forEach(t => { t.direction = 'sendrecv'; t.sender.replaceTrack(t.receiver.track.kind === 'audio' ? aTrack : vTrack); });
+  pc.getTransceivers().forEach(t => {
+    const k = t.receiver.track.kind; t.direction = 'sendrecv';
+    t.sender.replaceTrack(k === 'audio' ? aTrack : vTrack).catch(() => {});
+  });
 }
 async function connectTo(id) {
+  if (peers[id]) return;
   const { pc } = mkPeer(id);
-  pc.addTransceiver('audio'); pc.addTransceiver('video'); attach(pc);
-  await pc.setLocalDescription(await pc.createOffer());
-  sig(id, 'offer', pc.localDescription);
+  try {
+    pc.addTransceiver('audio', { direction: 'sendrecv' }); pc.addTransceiver('video', { direction: 'sendrecv' }); attach(pc);
+    await pc.setLocalDescription(await pc.createOffer());
+    sig(id, 'offer', { type: pc.localDescription.type, sdp: pc.localDescription.sdp });
+  } catch (e) { console.warn(e); }
 }
 const flush = p => p.pending.splice(0).forEach(c => p.pc.addIceCandidate(c).catch(() => {}));
 async function onSig({ to, from, type, data }) {
-  if (to !== me.id || !inCall) return;
+  if (to !== SID || !inCall) return;
   const p = mkPeer(from), pc = p.pc;
   try {
     if (type === 'offer') {
-      if (pc.signalingState !== 'stable') { if (me.id < from) return; await pc.setLocalDescription({ type: 'rollback' }); }
       await pc.setRemoteDescription(data); attach(pc);
       await pc.setLocalDescription(await pc.createAnswer());
-      sig(from, 'answer', pc.localDescription); flush(p);
+      sig(from, 'answer', { type: pc.localDescription.type, sdp: pc.localDescription.sdp }); flush(p);
     } else if (type === 'answer') { await pc.setRemoteDescription(data); flush(p); }
-    else if (type === 'ice') { pc.remoteDescription ? await pc.addIceCandidate(data) : p.pending.push(data); }
+    else if (type === 'ice') { pc.remoteDescription ? await pc.addIceCandidate(data).catch(() => {}) : p.pending.push(data); }
   } catch (e) { console.warn(e); }
 }
-function dropPeer(id) {
+function dropPeer(id, keepTile) {
   if (peers[id]) { peers[id].pc.close(); delete peers[id]; }
-  const t = $('t-' + id); if (t) t.remove();
+  const t = $('t-' + id); if (t && !keepTile) t.remove();
 }
-function addTile(id, name, local) {
+function addTile(id, name, local, uid) {
   let t = $('t-' + id); if (t) return t;
   t = document.createElement('div'); t.id = 't-' + id; t.className = 'tile novid';
-  t.innerHTML = `<video autoplay playsinline muted></video>${local ? '' : '<audio autoplay playsinline></audio>'}<span class="st"></span><div class="ph">${avatar(name || '?', 72, id)}</div><span class="nm">${esc(name || '?')}${local ? ' (toi)' : ''}</span>`;
+  t.innerHTML = `<video autoplay playsinline muted></video>${local ? '' : '<audio autoplay playsinline></audio>'}<span class="st"></span><div class="ph">${avatar(name || '?', 72, uid)}</div><span class="nm">${esc(name || '?')}${local ? ' (toi)' : ''}</span>`;
   t.onclick = () => t.classList.toggle('fit');
   $('grid').append(t);
   if (local) t.querySelector('video').srcObject = localView;
@@ -474,9 +498,9 @@ function setVideo(track) {
   vTrack = track;
   localView.getVideoTracks().forEach(t => localView.removeTrack(t));
   if (track) localView.addTrack(track);
-  const me_t = $('t-' + me.id);
+  const me_t = $('t-' + SID);
   if (me_t) { me_t.classList.toggle('novid', !track); me_t.classList.toggle('mirror', !!track && track === camTrack); }
-  Object.values(peers).forEach(p => p.pc.getTransceivers().forEach(t => t.receiver.track.kind === 'video' && t.sender.replaceTrack(track)));
+  Object.values(peers).forEach(p => p.pc.getTransceivers().forEach(t => t.receiver.track.kind === 'video' && t.sender.replaceTrack(track).catch(() => {})));
   updBtns();
 }
 function updBtns() {
@@ -485,18 +509,22 @@ function updBtns() {
 }
 async function joinCall() {
   if (inCall) return;
-  try { aTrack = (await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } })).getAudioTracks()[0]; }
-  catch { aTrack = null; alert('Micro non autorisé : tu pourras écouter mais pas parler.'); }
-  inCall = true; $('call').classList.add('on'); gapColor(); addTile(me.id, names[me.id], true); updBtns();
-  await cch.track({ name: names[me.id] || '?' });
-  Object.keys(cch.presenceState()).filter(id => id !== me.id).forEach(connectTo);
+  if (!cready) { alert('Le service d’appel n’est pas connecté (' + (cstate || 'en attente') + '). Réessaie dans quelques secondes.'); return; }
+  try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('indisponible');
+    aTrack = (await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } })).getAudioTracks()[0];
+  } catch { aTrack = null; alert('Micro non autorisé : tu pourras écouter mais pas parler.'); }
+  inCall = true; $('call').classList.add('on'); addTile(SID, names[me.id], true, me.id); updBtns();
+  const r = await cch.track({ name: names[me.id] || '?', uid: me.id });
+  if (r !== 'ok') toast('Impossible de rejoindre l’appel (' + r + ')');
+  callSync();
 }
 async function leaveCall() {
-  inCall = false; Object.keys(peers).forEach(dropPeer);
+  inCall = false; Object.keys(peers).forEach(id => dropPeer(id));
   [aTrack, camTrack, scrTrack].forEach(t => t && t.stop());
   aTrack = camTrack = scrTrack = vTrack = null;
   localView.getTracks().forEach(t => localView.removeTrack(t));
-  await cch.untrack(); $('grid').innerHTML = ''; $('call').classList.remove('on', 'min'); $('pill').style.display = 'none'; gapColor();
+  await cch.untrack(); $('grid').innerHTML = ''; $('call').classList.remove('on', 'min'); $('pill').style.display = 'none';
 }
 async function toggleCam() {
   if (camTrack) { camTrack.stop(); camTrack = null; if (!scrTrack) setVideo(null); return updBtns(); }
