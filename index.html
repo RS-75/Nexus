@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#04070f">
 <title>Nexus</title>
 <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -11,12 +11,12 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Nexus">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <style>
 :root{--bg:#04070f;--glass:rgba(16,28,60,.55);--line:rgba(130,175,255,.16);--blue:#3b82f6;--txt:#f1f6ff;--dim:#93a8d0}
 *{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;touch-action:manipulation;-webkit-text-size-adjust:100%}
-body{font-family:-apple-system,"SF Pro Text",system-ui,sans-serif;color:var(--txt);background:var(--bg);overflow:hidden;padding:env(safe-area-inset-top) 0 0}
+body{font-family:-apple-system,"SF Pro Text",system-ui,sans-serif;color:var(--txt);background:var(--bg);overflow:hidden}
 body::before,body::after{content:"";position:fixed;width:55vmax;height:55vmax;border-radius:50%;filter:blur(100px);z-index:-1}
 body::before{background:#1d4ed8;top:-25vmax;left:-20vmax;opacity:.5}
 body::after{background:#0ea5e9;bottom:-30vmax;right:-20vmax;opacity:.28}
@@ -48,7 +48,7 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.25)}
 .ico{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;font-size:22px;flex:none;background:linear-gradient(135deg,rgba(37,99,235,.55),rgba(56,189,248,.25));border:1px solid var(--line)}
 .av{border-radius:50%;font-weight:700;font-size:18px}
 /* tab bar */
-#tabs{position:absolute;left:0;right:0;bottom:0;display:flex;padding:8px 10px max(10px,calc(env(safe-area-inset-bottom) - 8px - var(--gap,0px)));gap:4px;z-index:5;border-radius:24px 24px 0 0;border-bottom:0;background:#162b63}
+#tabs{position:absolute;left:0;right:0;bottom:0;display:flex;padding:8px 10px calc(8px + env(safe-area-inset-bottom));gap:4px;z-index:5;border-radius:24px 24px 0 0;border-bottom:0;background:rgba(18,36,86,.82)}
 #tabs button{flex:1;background:none;border:0;border-radius:18px;padding:8px 0 6px;color:var(--dim);display:grid;justify-items:center;gap:3px;font-size:11px;cursor:pointer;transition:.2s}
 #tabs button svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 #tabs button.on{color:#fff;background:rgba(59,130,246,.28);box-shadow:0 0 22px rgba(59,130,246,.35)}
@@ -64,7 +64,7 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.25)}
 .m a{color:#bfe3ff}.m audio{height:36px;max-width:100%}
 .m time{display:block;font-size:10px;opacity:.55;text-align:right;margin-top:3px}
 .empty{margin:auto;color:var(--dim);text-align:center}
-#bar{display:flex;gap:8px;align-items:center;padding:10px 12px max(10px,calc(env(safe-area-inset-bottom) - 8px));border-top:1px solid var(--line)}
+#bar{display:flex;gap:8px;align-items:center;padding:10px 12px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--line)}
 #bar input{border-radius:22px}
 .round{width:46px;height:46px;border-radius:50%;padding:0;flex:none;display:grid;place-items:center;font-size:18px}
 #mic{background:rgba(59,130,246,.22);border:1px solid var(--line);cursor:pointer}
@@ -85,8 +85,8 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.25)}
 .deals a{flex:none;text-decoration:none;color:#fff;font-size:14px;font-weight:600;padding:9px 14px;border-radius:12px;background:rgba(59,130,246,.28);border:1px solid var(--line);display:flex;align-items:center;gap:7px}
 .deals a:first-child{background:linear-gradient(135deg,#2563eb,#38bdf8);border:0}
 .deals .i{width:18px;height:18px}
-html{background:#162b63}
-body{height:var(--h,auto);overscroll-behavior:none;position:fixed;inset:0;width:100%}
+html{background:var(--bg);height:100%;height:100dvh}
+body{height:100%;height:var(--h,100dvh);margin:0;overscroll-behavior:none}
 .panel h2{font-size:clamp(24px,7.5vw,32px)}
 #app{width:100%}
 @media(min-width:900px){#app{max-width:760px}}
@@ -98,7 +98,7 @@ body{height:var(--h,auto);overscroll-behavior:none;position:fixed;inset:0;width:
 .tile.fit video{object-fit:contain;background:#000}.tile.mirror video{transform:scaleX(-1)}
 .tile.novid video{opacity:0}.ph{position:absolute;inset:0;display:none;place-items:center}.novid .ph{display:grid}
 .nm{position:absolute;left:10px;bottom:8px;font-size:12px;background:rgba(0,0,0,.55);padding:3px 10px;border-radius:10px}
-#ctl{display:flex;justify-content:center;gap:14px;padding:12px 12px max(16px,calc(env(safe-area-inset-bottom) - 4px))}
+#ctl{display:flex;justify-content:center;gap:14px;padding:12px 12px calc(16px + env(safe-area-inset-bottom))}
 .cb{width:56px;height:56px;border-radius:50%;border:1px solid var(--line);background:rgba(30,50,100,.55);cursor:pointer;display:grid;place-items:center}
 .cb .i{width:24px;height:24px}.cb.act{background:linear-gradient(135deg,#2563eb,#38bdf8);border:0}
 .cb.mute{background:rgba(220,38,38,.45)}.cb.end{background:#dc2626;border:0}.cb.end .i{transform:rotate(135deg)}
@@ -235,16 +235,10 @@ function diag() {
   const inst = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
   d.textContent = `Diagnostic : ${inst ? 'appli installée' : 'navigateur'} · écran ${screen.width}×${screen.height} · fenêtre ${innerWidth}×${innerHeight} · marge basse ${$('probe').offsetHeight}px · appli ${document.body.offsetHeight}px`;
 }
-function gapColor() {
-  const ov = $('chat').classList.contains('on') || $('call').classList.contains('on');
-  document.documentElement.style.background = ov ? '#050914' : '#162b63';
-}
+function gapColor() {}
 function fit() {
   const r = document.documentElement, kb = vv && innerHeight - vv.height > 120;
-  // iOS (appli installée) : si la fenêtre est plus courte que l'écran, on mesure le trou pour le combler
-  const full = navigator.standalone && matchMedia('(orientation: portrait)').matches ? screen.height : 0;
   r.classList.toggle('kb', !!kb);
-  r.style.setProperty('--gap', (!kb && full > innerHeight + 4 ? full - innerHeight : 0) + 'px');
   if (kb) r.style.setProperty('--h', vv.height + 'px'); else r.style.removeProperty('--h');
   window.scrollTo(0, 0); diag();
 }
