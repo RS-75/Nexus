@@ -220,8 +220,8 @@ body{background:radial-gradient(80% 40% at 50% 100%,rgba(29,78,216,.38),transpar
     <h3>Astuces d’écriture</h3><p><code>||texte||</code> floute un spoil (on touche pour le lire). <code>**gras**</code>, <code>*italique*</code>, <code>`code`</code>. Commandes : <code>/dé</code>, <code>/pile</code>, <code>/tirage a, b, c</code>. Le micro envoie un vocal, l’icône image une photo.</p>
     <h3>Installer l’appli</h3><p>Dans Safari : bouton Partager, puis « Sur l’écran d’accueil ».</p>
     <button class="btn" id="gok" style="width:100%;margin-top:18px">Compris</button></div></div>
-  <div id="pushAsk"><div class="glass gbox"><h2>Activer les notifications ?</h2><p>Reçois une alerte à chaque nouveau message, même quand l’appli est fermée. Tu pourras changer ça plus tard dans Réglages.</p>
-    <button class="btn" id="pushYes" style="width:100%;margin-top:18px">Activer</button>
+  <div id="pushAsk"><div class="glass gbox"><h2>Autorisations</h2><p>Pour les appels et les alertes, Nexus a besoin du micro, de la caméra et des notifications. Ton appareil te les demande une seule fois, l’une après l’autre. Tu pourras changer ça plus tard dans Réglages.</p>
+    <button class="btn" id="pushYes" style="width:100%;margin-top:18px">Tout autoriser</button>
     <button id="pushNo" style="width:100%;margin-top:10px;background:none;border:1px solid var(--line);border-radius:14px;padding:13px;color:var(--dim);cursor:pointer">Plus tard</button></div></div>
   <div id="call"><button class="btn" id="snd" style="display:none;margin:10px 12px 0">Toucher pour activer le son</button><div id="grid"></div><div id="ctl">
     <button class="cb" id="cMin" data-i="down" title="Réduire"></button>
@@ -519,13 +519,13 @@ async function joinCall() {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('indisponible');
     aTrack = (await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } })).getAudioTracks()[0];
   } catch { aTrack = null; alert('Micro non autorisé : tu pourras écouter mais pas parler.'); }
-  inCall = true; $('call').classList.add('on'); addTile(SID, names[me.id], true, me.id); updBtns();
+  inCall = true; keepAwake(); $('call').classList.add('on'); addTile(SID, names[me.id], true, me.id); updBtns();
   const r = await cch.track({ name: names[me.id] || '?', uid: me.id });
   if (r !== 'ok') toast('Impossible de rejoindre l’appel (' + r + ')');
   callSync();
 }
 async function leaveCall() {
-  inCall = false; Object.keys(peers).forEach(id => dropPeer(id));
+  inCall = false; if (wake) { wake.release(); wake = null; } Object.keys(peers).forEach(id => dropPeer(id));
   [aTrack, camTrack, scrTrack].forEach(t => t && t.stop());
   aTrack = camTrack = scrTrack = vTrack = null;
   localView.getTracks().forEach(t => localView.removeTrack(t));
@@ -546,7 +546,27 @@ async function toggleScreen() {
 function endScreen() { scrTrack = null; setVideo(camTrack); }
 $('joinBtn').onclick = joinCall; $('cEnd').onclick = leaveCall; $('cCam').onclick = toggleCam; $('cScr').onclick = toggleScreen;
 $('cMic').onclick = () => { if (aTrack) aTrack.enabled = !aTrack.enabled; updBtns(); };
-addEventListener('pagehide', () => inCall && leaveCall());
+addEventListener('pagehide', e => !e.persisted && inCall && leaveCall());
+// Garde l'écran allumé pendant l'appel et se reconnecte quand on revient dans Nexus
+let wake = null, recovering = false;
+async function keepAwake() {
+  try { if (inCall && navigator.wakeLock && !wake) { wake = await navigator.wakeLock.request('screen'); wake.addEventListener('release', () => wake = null); } } catch (e) {}
+}
+async function recoverCall() {
+  if (!inCall || recovering) return; recovering = true;
+  try {
+    keepAwake();
+    if (camTrack && camTrack.readyState === 'ended') { camTrack = null; if (!scrTrack) setVideo(null); }
+    const micBad = aTrack && aTrack.readyState === 'ended';
+    const peerBad = Object.values(peers).some(p => ['failed', 'disconnected', 'closed'].includes(p.pc.connectionState));
+    if (!micBad && !peerBad) return callSync();
+    if (micBad) { try { aTrack = (await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } })).getAudioTracks()[0]; } catch (e) { aTrack = null; } }
+    Object.keys(peers).forEach(id => dropPeer(id, true));
+    await cch.untrack(); await cch.track({ name: names[me.id] || '?', uid: me.id });
+    callSync(); updBtns();
+  } finally { recovering = false; }
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(recoverCall, 600); });
 
 // --- Défilement : toujours sur les derniers messages ---
 let stick = true;
@@ -891,11 +911,17 @@ async function initPush() {
 }
 // Proposition unique à l'ouverture : on ne redemande plus ensuite (réglable dans Réglages)
 function askPush() {
-  if (!pushOk || localStorage.getItem('pushAsked') || Notification.permission !== 'default' || $('guide').classList.contains('on')) return;
+  if (localStorage.getItem('permsAsked') || $('guide').classList.contains('on') || !(pushOk || navigator.mediaDevices)) return;
   setTimeout(() => $('pushAsk').classList.add('on'), 800);
 }
-$('pushYes').onclick = () => { localStorage.setItem('pushAsked', '1'); $('pushAsk').classList.remove('on'); enablePush(); };
-$('pushNo').onclick = () => { localStorage.setItem('pushAsked', '1'); $('pushAsk').classList.remove('on'); };
+async function askAll() {
+  localStorage.setItem('permsAsked', '1'); $('pushAsk').classList.remove('on');
+  if (pushOk && Notification.permission === 'default') await enablePush();
+  const probe = async c => { try { (await navigator.mediaDevices.getUserMedia(c)).getTracks().forEach(t => t.stop()); return true; } catch (e) { return false; } };
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia && !(await probe({ audio: true, video: true }))) await probe({ audio: true });
+}
+$('pushYes').onclick = askAll;
+$('pushNo').onclick = () => { localStorage.setItem('permsAsked', '1'); $('pushAsk').classList.remove('on'); };
 </script>
 </body>
 </html>
