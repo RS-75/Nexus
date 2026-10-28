@@ -186,6 +186,7 @@ body{background:radial-gradient(80% 40% at 50% 100%,rgba(29,78,216,.38),transpar
     <div class="glass set"><div id="me" style="display:flex;align-items:center;gap:14px"></div>
       <label for="newname">Changer de pseudo</label><input id="newname" maxlength="20">
       <button class="btn" id="saveName">Enregistrer</button></div>
+    <div class="glass set"><b>Notifications</b><p id="pushState" style="color:var(--dim);font-size:13px;line-height:1.45"></p><button class="btn" id="pushBtn">Activer les notifications</button></div>
     <button class="danger" id="logout" data-i="logout">Se déconnecter</button>
     <p id="diag" style="color:var(--dim);font-size:12px;margin-top:18px;text-align:center;line-height:1.5"></p></section>
 
@@ -315,7 +316,7 @@ $('authForm').onsubmit = async e => {
     : await db.auth.signInWithPassword({ email, password });
   if (error) $('err').textContent = error.message;
 };
-$('logout').onclick = () => db.auth.signOut();
+$('logout').onclick = async () => { await dropPush(); db.auth.signOut(); };
 db.auth.onAuthStateChange((_, session) => {
   hideSplash();
   if (session) start(session.user);
@@ -331,7 +332,7 @@ async function start(user) {
   me = user;
   $('auth').style.display = 'none'; $('app').style.display = 'flex';
   await loadProfiles(); render(); if (!cch) setupCall(); if (!wch) setupWatch(); if (!localStorage.getItem('guideSeen')) $('guide').classList.add('on');
-  computeUnread(); loadShows();
+  computeUnread(); loadShows(); initPush(); openFromUrl();
   db.channel('live')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, p => {
       const m = p.new;
@@ -826,6 +827,63 @@ $('mic').onclick = async () => {
     rec.start(); $('mic').classList.add('rec');
   } catch { alert('Micro non autorisé.'); }
 };
+
+// --- Notifications push (Web Push / VAPID, sans compte Google) ---
+const VAPID_PUBLIC = 'BMWRpsNsStwGykCeMAiEsagfliYVXvRfkRbbVQJg59q0sAkKLsVT9Rbr2dgL_y9DQgxUz8WTaPRH2iBNNCnzJQg';
+const b64u = s => { const r = atob((s + '='.repeat((4 - s.length % 4) % 4)).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from([...r].map(c => c.charCodeAt(0))); };
+const pushOk = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+const isiOS = /iphone|ipad|ipod/i.test(navigator.userAgent), isApp = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+  navigator.serviceWorker.addEventListener('message', e => e.data && e.data.channel && openFromPush(e.data.channel));
+}
+function openFromPush(ch) {
+  if (!me) return;
+  const c = CHANNELS.find(x => x[0] === ch);
+  let label = c ? c[2] : null;
+  if (!label && ch.startsWith('dm:')) label = names[ch.split(':').slice(1).find(x => x !== me.id)] || 'Privé';
+  openChat(ch, label || ch);
+}
+function openFromUrl() {
+  const ch = new URLSearchParams(location.search).get('c');
+  if (ch) { history.replaceState(null, '', location.pathname); openFromPush(ch); }
+}
+const pushSub = async () => (await navigator.serviceWorker.ready).pushManager.getSubscription();
+async function saveSub(sub) {
+  const j = sub.toJSON();
+  return (await db.from('push_subscriptions').upsert({ user_id: me.id, endpoint: j.endpoint, p256dh: j.keys.p256dh, auth: j.keys.auth }, { onConflict: 'endpoint' })).error;
+}
+async function pushRefresh() {
+  const st = $('pushState'), b = $('pushBtn'); if (!st) return;
+  b.style.display = '';
+  if (!pushOk) {
+    st.textContent = isiOS && !isApp ? 'Sur iPhone : ouvre Nexus depuis l’icône de l’écran d’accueil (Safari, Partager, Sur l’écran d’accueil), puis reviens ici.' : 'Ce navigateur ne gère pas les notifications.';
+    b.style.display = 'none'; return;
+  }
+  if (Notification.permission === 'denied') { st.textContent = 'Notifications bloquées : autorise-les dans les réglages de l’appareil pour Nexus.'; b.style.display = 'none'; return; }
+  const sub = Notification.permission === 'granted' ? await pushSub() : null;
+  st.textContent = sub ? 'Activées sur cet appareil.' : 'Reçois une alerte à chaque nouveau message.';
+  b.textContent = sub ? 'Désactiver' : 'Activer les notifications';
+  b.dataset.on = sub ? '1' : '';
+}
+async function enablePush() {
+  const perm = await Notification.requestPermission();
+  if (perm !== 'granted') return pushRefresh();
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription() || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64u(VAPID_PUBLIC) });
+    const err = await saveSub(sub); if (err) throw err;
+  } catch (e) { alert('Activation impossible : ' + (e.message || e)); }
+  pushRefresh();
+}
+async function dropPush() {
+  try { const sub = await pushSub(); if (sub) { await db.from('push_subscriptions').delete().eq('endpoint', sub.endpoint); await sub.unsubscribe(); } } catch (e) {}
+}
+$('pushBtn').onclick = async () => { if ($('pushBtn').dataset.on) { await dropPush(); pushRefresh(); } else enablePush(); };
+async function initPush() {
+  await pushRefresh();
+  if (pushOk && Notification.permission === 'granted') { const sub = await pushSub(); if (sub) saveSub(sub); }
+}
 </script>
 </body>
 </html>
