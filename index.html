@@ -142,6 +142,30 @@ body{background:radial-gradient(80% 40% at 50% 100%,rgba(29,78,216,.38),transpar
 #tabs button{font-size:10.5px}
 .kb body{transform:translateY(var(--vt,0px))}
 #shows .set{margin-bottom:10px}
+#jeux h2{font-size:clamp(24px,7.5vw,32px);letter-spacing:-.02em}
+.c4{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;padding:10px;border-radius:22px;overflow:hidden;max-width:460px;margin:0 auto;background:linear-gradient(160deg,rgba(37,99,235,.6),rgba(12,50,120,.75));border:1px solid var(--line);box-shadow:0 12px 40px rgba(37,99,235,.25)}
+.c4c{display:grid;grid-template-rows:repeat(6,1fr);gap:6px;border-radius:14px}
+.c4c.ok{cursor:pointer}.c4c.ok:active{background:rgba(255,255,255,.14)}
+.hole{aspect-ratio:1;border-radius:50%;background:rgba(2,8,24,.78);box-shadow:inset 0 3px 8px rgba(0,0,0,.65);display:grid;place-items:center}
+.disc{width:88%;height:88%;border-radius:50%;display:block}
+.disc.t0{background:radial-gradient(circle at 35% 30%,#d4f5ff,#38bdf8 55%,#0284c7)}
+.disc.t1{background:radial-gradient(circle at 35% 30%,#ffe0e5,#fb7185 55%,#e11d48)}
+.disc.drop{animation:drop .5s cubic-bezier(.5,0,.85,.6)}
+.disc.w{animation:glow .7s infinite alternate}
+@keyframes drop{from{transform:translateY(-520%)}}
+@keyframes glow{to{filter:brightness(1.6) drop-shadow(0 0 8px #fff)}}
+.ttt{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px;border-radius:22px;max-width:420px;margin:0 auto;background:var(--glass);border:1px solid var(--line)}
+.tc{aspect-ratio:1;border-radius:16px;background:rgba(2,8,24,.55);border:1px solid var(--line);display:grid;place-items:center}
+.tc.ok{cursor:pointer}.tc.ok:active{background:rgba(59,130,246,.3)}
+.tc.w{background:rgba(59,130,246,.3);box-shadow:0 0 22px rgba(56,189,248,.45)}
+.mk{width:68%;height:68%;fill:none;stroke-width:3;stroke-linecap:round}.mk.pop{animation:mkpop .25s ease-out}
+@keyframes mkpop{from{transform:scale(.3);opacity:0}}
+.tmb{flex:1;padding:10px 12px;border-radius:16px;min-width:0}
+.pl{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:14px;opacity:.55}.pl span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pl.on{opacity:1;font-weight:700}.pl.on::after{content:"";width:8px;height:8px;border-radius:50%;margin-left:auto;flex:none;background:var(--tc);box-shadow:0 0 10px var(--tc);animation:p 1s infinite}
+.plr{display:flex;align-items:center;gap:10px}.plr.empty{opacity:.45;font-size:14px}
+.slot{width:30px;height:30px;border-radius:50%;border:1.5px dashed var(--dim);flex:none}
+.plr .av,.pl .av{flex:none}
 #pushAsk{display:none;position:fixed;inset:0;z-index:55;background:rgba(2,5,12,.78);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);place-items:center;padding:18px}#pushAsk.on{display:grid}
 </style>
 </head>
@@ -178,6 +202,7 @@ body{background:radial-gradient(80% 40% at 50% 100%,rgba(29,78,216,.38),transpar
       <div style="display:flex;gap:8px"><input id="shS" type="number" inputmode="numeric" min="1" value="1" placeholder="Saison"><input id="shE" type="number" inputmode="numeric" min="1" value="1" placeholder="Épisode"></div>
       <button class="btn" id="shAdd">Enregistrer mon avancement</button></div>
     <div id="shows"></div></section>
+  <section class="panel" id="p-jeux"><div id="jeux"></div></section>
   <section class="panel" id="p-appel"><div class="hero"><div class="ico" data-i="phone"></div><h2>Appel</h2>
     <p>Voix, vidéo et partage d’écran avec vos amis.</p>
     <div class="chips" id="who"></div><button class="btn" id="joinBtn">Rejoindre l’appel</button>
@@ -195,6 +220,7 @@ body{background:radial-gradient(80% 40% at 50% 100%,rgba(29,78,216,.38),transpar
     <button data-t="salons" data-i="chat" class="on">Salons</button>
     <button data-t="prive" data-i="users">Privé</button>
     <button data-t="cine" data-i="play">Ciné</button>
+    <button data-t="jeux" data-i="game">Jeux</button>
     <button data-t="appel" data-i="phone">Appel</button>
     <button data-t="reglages" data-i="sliders">Réglages</button>
   </nav>
@@ -258,7 +284,10 @@ const IC = {
  trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
  play:'<circle cx="12" cy="12" r="9"/><path d="M10 8.5l6 3.5-6 3.5z"/>',
  help:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 015 .5c0 1.5-2.5 2-2.5 3.5M12 17h.01"/>',
- down:'<path d="M6 9l6 6 6-6"/>'
+ down:'<path d="M6 9l6 6 6-6"/>',
+ game:'<rect x="2.5" y="7" width="19" height="11" rx="5.5"/><path d="M7.5 10.5v4M5.5 12.5h4"/><circle cx="15.5" cy="11.5" r=".9"/><circle cx="18" cy="13.5" r=".9"/>',
+ c4:'<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8" cy="9" r="1.5"/><circle cx="12" cy="9" r="1.5"/><circle cx="16" cy="9" r="1.5"/><circle cx="8" cy="14" r="1.5"/><circle cx="12" cy="14" r="1.5"/><circle cx="16" cy="14" r="1.5"/>',
+ ttt:'<path d="M9 3v18M15 3v18M3 9h18M3 15h18"/>'
 };
 const ic = n => `<svg class="i" viewBox="0 0 24 24">${IC[n]}</svg>`;
 document.querySelectorAll('[data-i]').forEach(e => e.insertAdjacentHTML('afterbegin', ic(e.dataset.i)));
@@ -335,7 +364,7 @@ async function start(user) {
   if (me && me.id === user.id) return;
   me = user;
   $('auth').style.display = 'none'; $('app').style.display = 'flex';
-  await loadProfiles(); render(); if (!cch) setupCall(); if (!wch) setupWatch(); if (!localStorage.getItem('guideSeen')) $('guide').classList.add('on');
+  await loadProfiles(); render(); if (!cch) setupCall(); if (!wch) setupWatch(); if (!gch) setupGames(); if (!localStorage.getItem('guideSeen')) $('guide').classList.add('on');
   computeUnread(); loadShows(); initPush(); openFromUrl();
   db.channel('live')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, p => {
@@ -376,6 +405,7 @@ document.querySelectorAll('#tabs button').forEach(b => b.onclick = async () => {
   document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('on', x === b));
   document.querySelectorAll('.panel').forEach(p => p.classList.toggle('on', p.id === 'p-' + b.dataset.t));
   if (b.dataset.t === 'prive') { await loadProfiles(); render(); }
+  if (b.dataset.t === 'jeux') gRender();
 });
 $('saveName').onclick = async () => {
   const u = $('newname').value.trim(); if (!u) return;
@@ -922,6 +952,236 @@ async function askAll() {
 }
 $('pushYes').onclick = askAll;
 $('pushNo').onclick = () => { localStorage.setItem('permsAsked', '1'); $('pushAsk').classList.remove('on'); };
+
+// --- Jeux : Puissance 4 et Morpion en direct (l'hôte arbitre, via Supabase Realtime) ---
+const GAMES = {
+  c4:  { name: 'Puissance 4', desc: 'Aligne 4 jetons avant les autres', w: 7, h: 6, k: 4 },
+  ttt: { name: 'Morpion', desc: 'Aligne 3 symboles', w: 3, h: 3, k: 3 }
+};
+const TEAM = [{ n: 'Cyan', c: '#38bdf8' }, { n: 'Rose', c: '#fb7185' }];
+let gch = null, rooms = {}, cur = null, gOnline = new Set(), lastN = {};
+const gsend = p => gch && gch.send({ type: 'broadcast', event: 'g', payload: { ...p, from: me.id } });
+const rid = () => Math.random().toString(36).slice(2, 8);
+const cap = R => R.mode === '2v2' ? 4 : 2;
+const modeTxt = R => R.mode === '2v2' ? '2 contre 2' : '1 contre 1';
+const teamOf = (R, uid) => { const p = R.players.find(x => x.uid === uid); return p ? p.team : -1; };
+const inTeam = (R, t) => R.players.filter(p => p.team === t);
+const nm = uid => names[uid] || '?';
+const pn = p => names[p.uid] || p.name || '?';
+const balanced = R => inTeam(R, 0).length >= 1 && inTeam(R, 0).length === inTeam(R, 1).length;
+
+function setupGames() {
+  gch = db.channel('games', { config: { presence: { key: SID }, broadcast: { self: false } } });
+  gch.on('broadcast', { event: 'g' }, ({ payload }) => onG(payload))
+     .on('presence', { event: 'sync' }, gSync)
+     .subscribe(st => { if (st === 'SUBSCRIBED') { gch.track({ uid: me.id }); gsend({ t: 'hello' }); } });
+}
+function gSync() {
+  gOnline = new Set(Object.values(gch.presenceState()).map(a => a[0].uid));
+  Object.values(rooms).forEach(R => {
+    if (R.host !== me.id && !gOnline.has(R.host)) { delete rooms[R.id]; if (cur === R.id) { cur = null; toast('L’hôte a quitté la partie'); } }
+    else if (R.host === me.id && R.status === 'lobby') {
+      const gone = R.players.filter(p => p.uid !== me.id && !gOnline.has(p.uid));
+      if (gone.length) { R.players = R.players.filter(p => !gone.includes(p)); R.n++; gPub(R); }
+    }
+  });
+  gRender();
+}
+function gPub(R) { rooms[R.id] = R; gsend({ t: 'room', room: R }); gRender(); }
+function onG(p) {
+  if (p.to && p.to !== me.id) return;
+  const R = rooms[p.id];
+  if (p.t === 'hello') Object.values(rooms).filter(r => r.host === me.id).forEach(r => gsend({ t: 'room', room: r, to: p.from }));
+  else if (p.t === 'room') gPut(p.room);
+  else if (p.t === 'close') { delete rooms[p.id]; if (cur === p.id) { cur = null; toast('La partie a été fermée'); } gRender(); }
+  else if (R && R.host === me.id) { hostAct(R, p); gPub(R); }
+}
+function gPut(R) {
+  const prev = rooms[R.id], away = !$('p-jeux').classList.contains('on'), mine = teamOf(R, me.id) >= 0;
+  rooms[R.id] = R;
+  if (away) {
+    const go = () => document.querySelector('#tabs [data-t=jeux]').click();
+    if (!prev && R.status === 'lobby' && R.host !== me.id) toast(`${nm(R.host)} lance ${GAMES[R.game].name} (${modeTxt(R)}) · Rejoindre`, go);
+    else if (prev && mine && R.status === 'play' && R.st) {
+      if (prev.status === 'lobby') toast('La partie commence · Jouer', go);
+      else if (prev.n !== R.n && R.st.order[R.st.turn] === me.id) toast(`À toi de jouer au ${GAMES[R.game].name}`, go);
+    }
+  }
+  gRender();
+}
+// Actions : l'hôte applique directement, les autres les envoient à l'hôte
+function act(R, p) {
+  p = { ...p, id: R.id, from: me.id, name: names[me.id] };
+  if (R.host === me.id) { hostAct(R, p); gPub(R); } else gsend(p);
+}
+function hostAct(R, p) {
+  if (p.t === 'join') {
+    if (R.status !== 'lobby' || R.players.some(x => x.uid === p.from) || R.players.length >= cap(R)) return;
+    const half = cap(R) / 2, auto = inTeam(R, 0).length <= inTeam(R, 1).length ? 0 : 1;
+    const t = (p.team === 0 || p.team === 1) && inTeam(R, p.team).length < half ? p.team : auto;
+    R.players.push({ uid: p.from, name: p.name, team: t }); R.n++;
+  } else if (p.t === 'team') {
+    const pl = R.players.find(x => x.uid === p.from);
+    if (!pl || R.status !== 'lobby' || pl.team === p.team || inTeam(R, p.team).length >= cap(R) / 2) return;
+    pl.team = p.team; R.n++;
+  } else if (p.t === 'leave') {
+    const pl = R.players.find(x => x.uid === p.from); if (!pl) return;
+    if (R.status === 'play') {
+      const w = 1 - pl.team; R.sc[w]++;
+      R.st.win = { team: w, line: [], who: inTeam(R, w).map(pn).join(' & '), forfeit: true }; R.status = 'done';
+    }
+    R.players = R.players.filter(x => x !== pl); R.n++;
+  } else if (p.t === 'start') {
+    if (p.from !== R.host || R.status !== 'lobby' || !balanced(R)) return;
+    R.sc = [0, 0]; R.rounds = 0; startRound(R);
+  } else if (p.t === 'again') {
+    if (R.status !== 'done' || !R.players.some(x => x.uid === p.from)) return;
+    if (balanced(R)) startRound(R); else { R.status = 'lobby'; R.st = null; R.n++; }
+  } else if (p.t === 'move') applyMove(R, p.from, p.mv || {});
+}
+function startRound(R) {
+  const t0 = inTeam(R, 0), t1 = inTeam(R, 1), order = [], g = GAMES[R.game];
+  for (let i = 0; i < t0.length; i++) order.push(t0[i].uid, t1[i].uid);
+  R.st = { b: Array(g.w * g.h).fill(null), order, turn: (R.rounds || 0) % order.length, win: null, last: -1 };
+  R.rounds = (R.rounds || 0) + 1; R.status = 'play'; R.n++;
+}
+function lineWin(b, w, h, k, last, team) {
+  const x0 = last % w, y0 = Math.floor(last / w);
+  for (const [dx, dy] of [[1, 0], [0, 1], [1, 1], [1, -1]]) {
+    const cells = [last];
+    for (const s of [1, -1]) {
+      let x = x0 + dx * s, y = y0 + dy * s;
+      while (x >= 0 && x < w && y >= 0 && y < h && b[y * w + x] === team) { cells.push(y * w + x); x += dx * s; y += dy * s; }
+    }
+    if (cells.length >= k) return cells;
+  }
+  return null;
+}
+function applyMove(R, uid, mv) {
+  const s = R.st, g = GAMES[R.game];
+  if (R.status !== 'play' || !s || s.order[s.turn] !== uid) return false;
+  const team = teamOf(R, uid); let at = -1;
+  if (R.game === 'ttt') { if (!(mv.i >= 0 && mv.i < 9) || s.b[mv.i] != null) return false; at = mv.i; }
+  else {
+    if (!(mv.c >= 0 && mv.c < 7)) return false;
+    for (let r = 5; r >= 0; r--) if (s.b[r * 7 + mv.c] == null) { at = r * 7 + mv.c; break; }
+    if (at < 0) return false;
+  }
+  s.b[at] = team; s.last = at; R.n++;
+  const line = lineWin(s.b, g.w, g.h, g.k, at, team);
+  if (line) { s.win = { team, line, who: inTeam(R, team).map(pn).join(' & ') }; R.sc[team]++; R.status = 'done'; }
+  else if (s.b.every(v => v != null)) { s.win = 'draw'; R.status = 'done'; }
+  else s.turn = (s.turn + 1) % s.order.length;
+  return true;
+}
+function gCreate(game, mode) {
+  const R = { id: rid(), game, mode, host: me.id, status: 'lobby', players: [{ uid: me.id, name: names[me.id] || '?', team: 0 }], st: null, sc: [0, 0], rounds: 0, n: 0 };
+  cur = R.id; gPub(R);
+}
+function gJoin(id, team) {
+  const R = rooms[id]; if (!R) return; cur = id;
+  if (R.status === 'lobby' && !R.players.some(x => x.uid === me.id)) act(R, { t: 'join', team });
+  gRender();
+}
+function gLeave() {
+  const R = rooms[cur], mine = R && teamOf(R, me.id) >= 0;
+  if (R && mine && R.status === 'play' && !confirm('Quitter la partie ? Tu perds la manche.')) return;
+  cur = null;
+  if (R) {
+    if (R.host === me.id) { delete rooms[R.id]; gsend({ t: 'close', id: R.id }); }
+    else if (mine) gsend({ t: 'leave', id: R.id, from: me.id });
+  }
+  gRender();
+}
+$('jeux').onclick = e => {
+  const b = e.target.closest('[data-g]'); if (!b) return;
+  const a = b.dataset.g, R = rooms[cur];
+  if (a === 'new') return gCreate(b.dataset.game, b.dataset.mode);
+  if (a === 'join') return gJoin(b.dataset.id, b.dataset.team === undefined ? undefined : +b.dataset.team);
+  if (a === 'watch') { cur = b.dataset.id; return gRender(); }
+  if (a === 'leave') return gLeave();
+  if (!R) return;
+  if (a === 'team') act(R, { t: 'team', team: +b.dataset.team });
+  else if (a === 'start') act(R, { t: 'start' });
+  else if (a === 'again') act(R, { t: 'again' });
+  else if (a === 'cell') act(R, { t: 'move', mv: { i: +b.dataset.i } });
+  else if (a === 'col') act(R, { t: 'move', mv: { c: +b.dataset.c } });
+};
+
+// --- Affichage ---
+function gRender() {
+  const box = $('jeux'); if (!box || !me) return;
+  const R = cur && rooms[cur]; if (cur && !R) cur = null;
+  box.innerHTML = R ? roomView(R) : homeView();
+  if (R) lastN[R.id] = R.n;
+}
+function homeView() {
+  const list = Object.values(rooms).sort((a, b) => b.n - a.n);
+  return '<h2>Jeux</h2><p class="sub">Joue avec les autres, en direct</p>'
+    + Object.entries(GAMES).map(([id, g]) => `<div class="glass set"><div style="display:flex;align-items:center;gap:14px"><div class="ico">${ic(id)}</div><div><b style="font-size:17px;display:block">${g.name}</b><span style="color:var(--dim);font-size:13px">${g.desc}</span></div></div>`
+      + `<div style="display:flex;gap:8px"><button class="btn" style="flex:1" data-g="new" data-game="${id}" data-mode="1v1">1 contre 1</button><button class="btn" style="flex:1" data-g="new" data-game="${id}" data-mode="2v2">2 contre 2</button></div></div>`).join('')
+    + '<h3 style="margin:22px 0 10px;font-size:18px">Parties en cours</h3>'
+    + (list.length ? list.map(roomCard).join('') : '<p class="sub">Aucune partie pour l’instant. Lance-en une !</p>');
+}
+function roomCard(R) {
+  const mine = teamOf(R, me.id) >= 0, open = R.status === 'lobby' && R.players.length < cap(R);
+  const st = R.status === 'lobby' ? `${R.players.length}/${cap(R)} joueurs` : R.status === 'play' ? 'En cours' : 'Terminée';
+  const [a, l] = mine ? ['watch', 'Reprendre'] : open ? ['join', 'Rejoindre'] : ['watch', 'Regarder'];
+  return `<div class="glass card" style="cursor:default"><div class="ico">${ic(R.game)}</div><div><b>${GAMES[R.game].name} · ${modeTxt(R)}</b><span class="d">Hôte : ${esc(nm(R.host))} · ${st}</span></div><button class="btn" style="margin-left:auto;padding:9px 14px" data-g="${a}" data-id="${R.id}">${l}</button></div>`;
+}
+function roomView(R) {
+  const g = GAMES[R.game], mine = teamOf(R, me.id) >= 0;
+  const head = `<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px"><button class="round" style="background:rgba(59,130,246,.22);border:1px solid var(--line);cursor:pointer" data-g="leave" aria-label="Quitter">${ic('back')}</button><div><b style="font-size:21px">${g.name}</b><div style="color:var(--dim);font-size:13px">${modeTxt(R)} · hôte ${esc(nm(R.host))}</div></div></div>`;
+  if (R.status === 'lobby') return head + lobbyView(R, mine);
+  const s = R.st, tu = s.order[s.turn], play = R.status === 'play', tt = Math.max(0, teamOf(R, tu));
+  let msg, c;
+  if (play) { c = TEAM[tt].c; msg = tu === me.id ? 'À toi de jouer !' : `Tour de ${esc(nm(tu))}`; }
+  else if (s.win === 'draw') { c = '#93a8d0'; msg = 'Match nul'; }
+  else { c = TEAM[s.win.team].c; msg = `Victoire · ${esc(s.win.who)}${s.win.forfeit ? ' (abandon)' : ''}`; }
+  const score = `<div style="text-align:center;margin-bottom:12px;font-size:14px"><span style="color:${TEAM[0].c};font-weight:700">${TEAM[0].n} ${R.sc[0]}</span> <span style="color:var(--dim)">·</span> <span style="color:${TEAM[1].c};font-weight:700">${R.sc[1]} ${TEAM[1].n}</span></div>`;
+  const strip = '<div style="display:flex;gap:10px;margin-bottom:12px">' + [0, 1].map(t => `<div class="glass tmb" style="--tc:${TEAM[t].c};border-color:${TEAM[t].c}55"><div style="font-size:12px;font-weight:700;color:${TEAM[t].c};margin-bottom:4px">${TEAM[t].n}</div>${inTeam(R, t).map(p => `<div class="pl${play && p.uid === tu ? ' on' : ''}">${avatar(pn(p), 26, p.uid)}<span>${esc(pn(p))}</span></div>`).join('')}</div>`).join('') + '</div>';
+  const banner = `<div class="glass" style="padding:12px;text-align:center;font-weight:700;margin-bottom:14px;color:${c};border-color:${c}66">${msg}</div>`;
+  const canPlay = play && tu === me.id, board = R.game === 'c4' ? c4Board(R, canPlay) : tttBoard(R, canPlay);
+  const btns = `<div style="display:flex;gap:8px;margin-top:18px">${!play && mine ? '<button class="btn" style="flex:1" data-g="again">Rejouer</button>' : ''}<button class="btn" style="flex:1;background:rgba(30,50,100,.55);border:1px solid var(--line)" data-g="leave">Quitter</button></div>`;
+  return head + score + strip + banner + board + (mine ? '' : '<p class="sub" style="text-align:center;margin:12px 0 0">Tu regardes la partie</p>') + btns;
+}
+function lobbyView(R, mine) {
+  const half = cap(R) / 2, host = R.host === me.id, ok = balanced(R);
+  const cols = [0, 1].map(t => {
+    const ps = inTeam(R, t), free = half - ps.length, c = TEAM[t].c, here = teamOf(R, me.id) === t;
+    const btn = here || free <= 0 ? '' : `<button class="btn" style="padding:10px" data-g="${mine ? 'team' : 'join'}" data-team="${t}" data-id="${R.id}">${mine ? 'Passer dans cette équipe' : 'Rejoindre cette équipe'}</button>`;
+    const rows = ps.map(p => `<div class="plr">${avatar(pn(p), 30, p.uid)}<span>${esc(pn(p))}</span>${p.uid === R.host ? '<span class="chip" style="margin-left:auto;font-size:12px;padding:3px 9px">Hôte</span>' : ''}</div>`).join('');
+    const slots = Array(Math.max(0, free)).fill('<div class="plr empty"><span class="slot"></span>En attente d’un joueur…</div>').join('');
+    return `<div class="glass set" style="border-color:${c}66"><b style="color:${c}">Équipe ${TEAM[t].n}</b>${rows}${slots}${btn}</div>`;
+  }).join('');
+  const foot = host
+    ? `<button class="btn" style="width:100%;${ok ? '' : 'opacity:.45'}" data-g="start" ${ok ? '' : 'disabled'}>Lancer la partie</button><p class="sub" style="margin:10px 0 0;text-align:center;font-size:13px">${ok ? 'Prêt à jouer !' : 'Il faut autant de joueurs dans chaque équipe.'}</p>`
+    : `<p class="sub" style="text-align:center">${mine ? 'En attente du lancement par l’hôte…' : 'Rejoins une équipe pour jouer.'}</p>`;
+  return cols + foot;
+}
+function c4Board(R, canPlay) {
+  const s = R.st, fresh = lastN[R.id] !== R.n, win = new Set((s.win && s.win.line) || []);
+  let cols = '';
+  for (let c = 0; c < 7; c++) {
+    let cells = ''; const ok = canPlay && s.b[c] == null;
+    for (let r = 0; r < 6; r++) {
+      const i = r * 7 + c, v = s.b[i];
+      cells += `<div class="hole">${v != null ? `<i class="disc t${v}${win.has(i) ? ' w' : ''}${fresh && i === s.last ? ' drop' : ''}"></i>` : ''}</div>`;
+    }
+    cols += `<div class="c4c${ok ? ' ok' : ''}"${ok ? ` data-g="col" data-c="${c}"` : ''}>${cells}</div>`;
+  }
+  return `<div class="c4">${cols}</div>`;
+}
+const mark = (t, anim) => t === 0
+  ? `<svg viewBox="0 0 24 24" class="mk${anim ? ' pop' : ''}"><path d="M5.5 5.5l13 13M18.5 5.5l-13 13" stroke="${TEAM[0].c}"/></svg>`
+  : `<svg viewBox="0 0 24 24" class="mk${anim ? ' pop' : ''}"><circle cx="12" cy="12" r="7" stroke="${TEAM[1].c}"/></svg>`;
+function tttBoard(R, canPlay) {
+  const s = R.st, fresh = lastN[R.id] !== R.n, win = new Set((s.win && s.win.line) || []);
+  return '<div class="ttt">' + s.b.map((v, i) => {
+    const ok = canPlay && v == null;
+    return `<div class="tc${ok ? ' ok' : ''}${win.has(i) ? ' w' : ''}"${ok ? ` data-g="cell" data-i="${i}"` : ''}>${v == null ? '' : mark(v, fresh && i === s.last)}</div>`;
+  }).join('') + '</div>';
+}
 </script>
 </body>
 </html>
