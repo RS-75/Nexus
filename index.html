@@ -188,6 +188,35 @@ body{background:radial-gradient(80% 40% at 50% 100%,rgba(29,78,216,.38),transpar
 .tab-bubble.go i{animation:bubbleStretch .55s cubic-bezier(.3,1.3,.5,1)}
 @keyframes bubbleStretch{0%{transform:scale(1,1)}35%{transform:scale(1.22,.9)}70%{transform:scale(.97,1.05)}100%{transform:scale(1,1)}}
 .kb #tabs{display:none}
+#sortie{display:none;position:absolute;inset:0;z-index:10;flex-direction:column;background:rgba(4,7,15,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+#sortie.on{display:flex}
+#sHead{display:flex;align-items:center;gap:12px;padding:14px 16px;font-weight:600;font-size:17px}
+#sBack{background:none;border:0;cursor:pointer;color:#7cb2ff;padding:0 6px 2px 0}#sBack .i{width:26px;height:26px}
+#sBody{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 18px calc(34px + env(safe-area-inset-bottom))}
+#sLoad,#sPlan{display:none}
+.sHero h2{font-size:clamp(28px,8.5vw,36px);letter-spacing:-.02em;line-height:1.1;background:linear-gradient(120deg,#fff,#7dd3fc 70%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sHero p{color:var(--dim);margin:8px 0 18px;line-height:1.5}
+.sform{padding:18px;display:grid;gap:10px}.sform label{font-size:11.5px;color:var(--dim);letter-spacing:.06em;text-transform:uppercase}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.row2>div{display:grid;gap:6px;align-content:start}
+.chips2{display:flex;flex-wrap:wrap;gap:7px}
+.chips2 button,.ghostb{background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:20px;padding:7px 13px;font-size:13.5px;cursor:pointer;color:var(--txt)}
+.chips2 button.on{background:rgba(56,189,248,.25);border-color:rgba(125,211,252,.6);box-shadow:0 0 14px rgba(56,189,248,.3)}
+.ghostb{padding:12px;width:100%;font-size:15px;border-radius:14px}.ghostb.on{background:rgba(56,189,248,.25);border-color:rgba(125,211,252,.6)}
+.big{display:flex;align-items:center;justify-content:center;gap:9px;padding:16px;font-size:16px;margin-top:6px;box-shadow:0 8px 28px rgba(37,99,235,.45)}
+#sortie h3{margin:26px 0 12px;font-size:18px}.sm{color:var(--dim);font-size:14px;line-height:1.5}
+#sLoad{text-align:center;padding-top:18vh}
+.orb{width:84px;height:84px;margin:0 auto 28px;border-radius:50%;background:conic-gradient(from 0deg,#2563eb,#38bdf8,#a78bfa,#2563eb);animation:spin 1.6s linear infinite;box-shadow:0 0 50px rgba(56,189,248,.5);-webkit-mask:radial-gradient(circle,transparent 56%,#000 58%);mask:radial-gradient(circle,transparent 56%,#000 58%)}
+@keyframes spin{to{transform:rotate(360deg)}}#sStep{font-size:17px;font-weight:600;margin-bottom:6px}
+.rscroll{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 -18px;padding:4px 18px 10px}
+.rcard{flex:0 0 80%;scroll-snap-align:start;padding:16px;display:grid;gap:7px;align-content:start}
+.rt{display:flex;justify-content:space-between;gap:10px;font-size:17px}.rt span{color:#7cc4ff;font-weight:700}.rs{font-size:13px;color:#8cc0ff}.rcard p{color:var(--dim);font-size:14px;line-height:1.5}
+.tg{font-size:12.5px;padding:5px 10px;border-radius:10px;background:rgba(56,189,248,.16);border:1px solid rgba(125,211,252,.3);width:fit-content}.tg.hot{background:rgba(244,114,182,.16);border-color:rgba(244,114,182,.4)}
+.lks{display:flex;gap:8px;flex-wrap:wrap}.lk{display:inline-flex;align-items:center;font-size:13px;font-weight:600;color:#bfe3ff;text-decoration:none;padding:6px 12px;border-radius:14px;background:rgba(59,130,246,.25);border:1px solid var(--line)}
+.tl{margin-left:6px;padding-left:22px;border-left:2px solid rgba(124,178,255,.25)}
+.ev{position:relative;padding:0 0 20px}.ev::before{content:"";position:absolute;left:-29px;top:4px;width:12px;height:12px;border-radius:50%;background:#38bdf8;box-shadow:0 0 12px #38bdf8}
+.ev .t{font-size:13px;color:#7cc4ff;font-weight:700}.ev b{display:block;font-size:17px;margin:2px 0}.ev p{color:var(--dim);font-size:14px;line-height:1.5}
+.tj{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12.5px;color:var(--dim);margin:-6px 0 14px}.tj .i{width:14px;height:14px}
+#sPlan ul{padding-left:20px;color:var(--dim);line-height:1.6;font-size:14px}
 </style>
 </head>
 <body>
@@ -260,10 +289,30 @@ body{background:radial-gradient(80% 40% at 50% 100%,rgba(29,78,216,.38),transpar
   </div>
   <button class="btn" id="pill">Appel en cours · Revenir</button>
   <div id="toast"></div>
+  <div id="sortie"><div id="sHead"><button id="sBack" data-i="back"></button><span id="sTitle">Sortie</span></div>
+    <div id="sBody">
+      <div id="sHome">
+        <div class="sHero"><h2>Organise une sortie</h2><p>Dis ce que vous aimez : l’IA trouve les meilleures adresses et construit votre journée, trajets compris.</p></div>
+        <div class="glass sform">
+          <label for="sEnvie">Envie</label><input id="sEnvie" placeholder="Burgers, sushis, brunch…" autocomplete="off">
+          <div class="chips2" id="sEnvies"></div>
+          <div class="row2"><div><label for="sLieu">Où</label><input id="sLieu" value="Paris"></div><div><label for="sNb">Personnes</label><input id="sNb" type="number" inputmode="numeric" min="1" value="4"></div></div>
+          <div class="row2"><div><label for="sDate">Date</label><input id="sDate" type="date"></div><div><label>Budget</label>
+            <div class="chips2" id="sBud"><button type="button" data-v="€">€</button><button type="button" data-v="€€" class="on">€€</button><button type="button" data-v="€€€">€€€</button></div></div></div>
+          <div class="row2"><div><label for="sDeb">Début</label><input id="sDeb" type="time" value="14:00"></div><div><label for="sFin">Fin</label><input id="sFin" type="time" value="23:00"></div></div>
+          <label for="sPlus">Autres envies (facultatif)</label><input id="sPlus" placeholder="balade, musée, bowling, bar…" autocomplete="off">
+          <button class="btn big" id="sGo" data-i="sparkle">Laisser l’IA organiser</button>
+        </div>
+        <h3>Sorties du groupe</h3><div id="sList"></div>
+      </div>
+      <div id="sLoad"><div class="orb"></div><div id="sStep">Recherche des meilleures adresses…</div><p class="sm">Ça prend environ une minute.</p></div>
+      <div id="sPlan"></div>
+    </div></div>
   <div id="guide"><div class="glass gbox"><h2>Bienvenue sur Nexus</h2><p>Votre espace privé entre amis. Voici l’essentiel.</p>
     <h3>Salons et messages privés</h3><p>Touche un salon pour discuter. Touche un message pour réagir, répondre ou le supprimer. L’onglet Privé sert aux discussions à deux.</p>
     <h3>Ciné : regarder ensemble</h3><p>Dans l’onglet Ciné, colle un lien YouTube et lance-le. Tous ceux qui sont connectés le voient s’ouvrir et la lecture reste synchronisée. Plus bas : le suivi des séries (chacun note son épisode et l’appli indique qui ne doit pas spoiler) et le tour de rôle du film de la semaine.</p>
     <h3>Appels</h3><p>L’onglet Appel permet de parler, d’allumer la caméra et de partager l’écran (pas depuis un iPhone). Le bouton flèche réduit l’appel pour continuer à naviguer, par exemple vers Ciné.</p>
+    <h3>Sortie : l’IA organise</h3><p>Dans Salons, ouvre « Sortie », dis ce que vous voulez manger, le lieu et les horaires. L’IA cherche des adresses, calcule les trajets et propose le programme à tout le groupe, qui répond « Je viens » ou « Pas dispo ».</p>
     <h3>Astuces d’écriture</h3><p><code>||texte||</code> floute un spoil (on touche pour le lire). <code>**gras**</code>, <code>*italique*</code>, <code>`code`</code>. Commandes : <code>/dé</code>, <code>/pile</code>, <code>/tirage a, b, c</code>. Le micro envoie un vocal, l’icône image une photo.</p>
     <h3>Installer l’appli</h3><p>Dans Safari : bouton Partager, puis « Sur l’écran d’accueil ».</p>
     <button class="btn" id="gok" style="width:100%;margin-top:18px">Compris</button></div></div>
@@ -283,7 +332,7 @@ body{background:radial-gradient(80% 40% at 50% 100%,rgba(29,78,216,.38),transpar
 const SUPABASE_URL = 'https://yugsfrkvmgjtymbwocqs.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_37O6tX6P-t7c0gJHmyUv2A_E6FP-zWG';
 
-const CHANNELS = [['general','chat','Général','Discussion libre'],['bons-plans','tag','Bons plans','Les bons plans à ne pas rater'],['films','film','Films','Liens et avis films'],['series','tv','Séries','Les séries du moment']];
+const CHANNELS = [['general','chat','Général','Discussion libre'],['bons-plans','tag','Bons plans','Les bons plans à ne pas rater'],['films','film','Films','Liens et avis films'],['series','tv','Séries','Les séries du moment'],['sortie','compass','Sortie','L’IA organise votre journée']];
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = id => document.getElementById(id);
 const IC = {
@@ -306,6 +355,9 @@ const IC = {
  play:'<circle cx="12" cy="12" r="9"/><path d="M10 8.5l6 3.5-6 3.5z"/>',
  help:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 015 .5c0 1.5-2.5 2-2.5 3.5M12 17h.01"/>',
  down:'<path d="M6 9l6 6 6-6"/>',
+ compass:'<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
+ route:'<circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h6a3 3 0 000-6h-4a3 3 0 010-6h6"/>',
+ sparkle:'<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.7 1.8L21.5 18.5l-1.8.7L19 21l-.7-1.800-1.800-.7 1.800-.7z"/>',
  game:'<rect x="2.5" y="7" width="19" height="11" rx="5.5"/><path d="M7.5 10.5v4M5.5 12.5h4"/><circle cx="15.5" cy="11.5" r=".9"/><circle cx="18" cy="13.5" r=".9"/>',
  c4:'<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8" cy="9" r="1.5"/><circle cx="12" cy="9" r="1.5"/><circle cx="16" cy="9" r="1.5"/><circle cx="8" cy="14" r="1.5"/><circle cx="12" cy="14" r="1.5"/><circle cx="16" cy="14" r="1.5"/>',
  ttt:'<path d="M9 3v18M15 3v18M3 9h18M3 15h18"/>'
@@ -402,6 +454,10 @@ async function start(user) {
       const r = p.old; if (reacts[r.message_id]) { reacts[r.message_id] = reacts[r.message_id].filter(x => !(x.user_id === r.user_id && x.emoji === r.emoji)); rxRender(r.message_id); }
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'shows' }, () => loadShows())
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'sorties' }, p => {
+      if ($('sortie').classList.contains('on')) loadSorties();
+      if (p.new.user_id !== me.id) toast((names[p.new.user_id] || 'Quelqu’un') + ' propose une sortie · Voir', openSortie);
+    })
     .subscribe();
 }
 
@@ -419,7 +475,7 @@ function render() {
     <div><b style="font-size:18px">${esc(n)}</b><br><span style="color:var(--dim);font-size:13px">Touche la photo pour la changer</span></div>`;
   $('photo').onchange = e => e.target.files[0] && uploadPhoto(e.target.files[0]);
   if (document.activeElement !== $('newname')) $('newname').value = n;
-  document.querySelectorAll('.card[data-c]').forEach(b => b.onclick = () => openChat(b.dataset.c, b.dataset.n));
+  document.querySelectorAll('.card[data-c]').forEach(b => b.onclick = () => b.dataset.c === 'sortie' ? openSortie() : openChat(b.dataset.c, b.dataset.n));
   renderTurn(); renderQ(); renderShows();
 }
 document.querySelectorAll('#tabs button').forEach(b => b.onclick = async () => {
@@ -692,6 +748,73 @@ $('shAdd').onclick = async () => {
   const { error } = ex ? await db.from('shows').update(row).eq('id', ex.id) : await db.from('shows').insert(row);
   if (error) return alert(error.message);
   $('shTitle').value = ''; loadShows();
+};
+
+// --- Sortie : l'IA organise la journée ---
+const ENVIES = ['Burgers', 'Pizza', 'Sushi', 'Brunch', 'Street food', 'Box à partager', 'Coréen', 'Tacos'];
+let sBud = '€€', sRows = [], sVotes = [];
+const safeUrl = u => /^https?:\/\//.test(u || '') ? esc(u) : '';
+const gmap = q => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
+const gdir = (a, b) => 'https://www.google.com/maps/dir/?api=1&travelmode=transit&origin=' + encodeURIComponent(a) + '&destination=' + encodeURIComponent(b);
+const fmtDate = d => d ? new Date(d + 'T12:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) : '';
+function sShow(v) { ['sHome', 'sLoad', 'sPlan'].forEach(x => $(x).style.display = x === v ? 'block' : 'none'); $('sTitle').textContent = v === 'sPlan' ? 'Programme' : 'Sortie'; $('sBody').scrollTop = 0; }
+function openSortie() { $('sortie').classList.add('on'); sShow('sHome'); if (!$('sDate').value) $('sDate').value = new Date().toISOString().slice(0, 10); loadSorties(); }
+$('sBack').onclick = () => { if ($('sPlan').style.display === 'block') sShow('sHome'); else $('sortie').classList.remove('on'); };
+$('sEnvies').innerHTML = ENVIES.map(e => `<button type="button">${e}</button>`).join('');
+$('sEnvies').onclick = e => { const b = e.target.closest('button'); if (!b) return; const i = $('sEnvie'); i.value = i.value.includes(b.textContent) ? i.value : (i.value ? i.value + ', ' : '') + b.textContent; };
+$('sBud').onclick = e => { const b = e.target.closest('button'); if (!b) return; sBud = b.dataset.v; $('sBud').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); };
+async function loadSorties() {
+  const [a, b] = await Promise.all([db.from('sorties').select('*').order('created_at', { ascending: false }).limit(20), db.from('sortie_votes').select('*')]);
+  sRows = a.data || []; sVotes = b.data || []; renderSList();
+}
+function renderSList() {
+  $('sList').innerHTML = sRows.length ? sRows.map(r => `<button class="card glass" data-id="${r.id}"><div class="ico">${ic('compass')}</div><div><b>${esc(r.plan.titre || 'Sortie')}</b><span class="d">${esc(names[r.user_id] || '?')} · ${esc(fmtDate(r.params && r.params.date))}</span></div><span class="chev">${ic('next')}</span></button>`).join('')
+    : '<p class="sm">Aucune sortie pour l’instant. Lance la première !</p>';
+  $('sList').querySelectorAll('.card').forEach(b => b.onclick = () => showPlan(sRows.find(r => String(r.id) === b.dataset.id)));
+}
+function showPlan(r) {
+  if (!r) return;
+  const p = r.plan, q = r.params || {}, prog = p.programme || [];
+  const rs = (p.restaurants || []).map(x => `<div class="rcard glass"><div class="rt"><b>${esc(x.nom)}</b><span>${esc(x.prix || '')}</span></div>
+    <div class="rs">${esc([x.specialite, x.quartier].filter(Boolean).join(' · '))}</div><p>${esc(x.pourquoi || '')}</p>
+    ${x.menu_box ? `<div class="tg">${esc(x.menu_box)}</div>` : ''}${x.tendance ? `<div class="tg hot">${esc(x.tendance)}</div>` : ''}
+    <div class="lks"><a class="lk" href="${gmap((x.nom || '') + ' ' + (x.adresse || ''))}" target="_blank" rel="noopener">Plan</a>${safeUrl(x.source) ? `<a class="lk" href="${safeUrl(x.source)}" target="_blank" rel="noopener">Source</a>` : ''}</div></div>`).join('');
+  const tl = prog.map((e, i) => {
+    const t = e.trajet, prev = prog[i - 1];
+    const tj = t && t.minutes ? `<div class="tj">${ic('route')} ${esc(t.minutes)} min · ${esc(t.mode || '')}${t.detail ? ' · ' + esc(t.detail) : ''}${prev ? ` <a class="lk" href="${gdir(prev.adresse || prev.lieu || '', e.adresse || e.lieu || '')}" target="_blank" rel="noopener">Itinéraire</a>` : ''}</div>` : '';
+    return `${tj}<div class="ev"><div class="t">${esc(e.heure || '')}${e.fin ? ' – ' + esc(e.fin) : ''}</div><b>${esc(e.titre || e.lieu || '')}</b><p>${esc([e.lieu, e.adresse].filter(Boolean).join(' · '))}</p>${e.detail ? `<p>${esc(e.detail)}</p>` : ''}</div>`;
+  }).join('');
+  const yes = sVotes.filter(v => v.sortie_id === r.id && v.vote === 'oui').map(v => names[v.user_id] || '?');
+  const mine = sVotes.find(v => v.sortie_id === r.id && v.user_id === me.id);
+  $('sPlan').innerHTML = `<div class="sHero"><h2>${esc(p.titre || 'Sortie')}</h2><p>${esc(p.resume || '')}<br>${esc(fmtDate(q.date))} · ${esc(q.debut || '')}–${esc(q.fin || '')} · ${esc(q.personnes || '')} pers. · proposé par ${esc(names[r.user_id] || '?')}</p></div>
+    <h3>Où manger</h3><div class="rscroll">${rs}</div>
+    <h3>Programme de la journée</h3><div class="tl">${tl}</div>
+    ${(p.conseils || []).length ? `<h3>Bon à savoir</h3><ul>${p.conseils.map(c => `<li>${esc(c)}</li>`).join('')}</ul>` : ''}
+    <div class="glass sform" style="margin-top:24px"><b>Tu viens ?</b>
+      <div class="row2"><button class="ghostb${mine && mine.vote === 'oui' ? ' on' : ''}" data-v="oui">Je viens</button><button class="ghostb${mine && mine.vote === 'non' ? ' on' : ''}" data-v="non">Pas dispo</button></div>
+      <p class="sm">${yes.length ? 'Partants : ' + esc(yes.join(', ')) : 'Personne n’a encore répondu.'}</p>
+      <button class="btn" id="sShare">Partager dans Général</button></div>`;
+  $('sPlan').querySelectorAll('[data-v]').forEach(b => b.onclick = async () => {
+    await db.from('sortie_votes').upsert({ sortie_id: r.id, user_id: me.id, vote: b.dataset.v }, { onConflict: 'sortie_id,user_id' });
+    await loadSorties(); showPlan(sRows.find(x => x.id === r.id));
+  });
+  $('sShare').onclick = async () => { channel = 'general'; await send({ content: 'Sortie proposée : ' + (p.titre || '') + ' (' + fmtDate(q.date) + '). Ouvre Salons › Sortie pour voir le programme et dire si tu viens.' }); toast('Partagé dans Général'); };
+  sShow('sPlan');
+}
+$('sGo').onclick = async () => {
+  const params = { envie: $('sEnvie').value.trim(), lieu: $('sLieu').value.trim() || 'Paris', personnes: +$('sNb').value || 4, date: $('sDate').value, debut: $('sDeb').value, fin: $('sFin').value, budget: sBud, plus: $('sPlus').value.trim() };
+  if (!params.envie) return alert('Dis-nous ce que vous avez envie de manger.');
+  const steps = ['Recherche des meilleures adresses…', 'Vérification des avis et des tendances…', 'Calcul des trajets…', 'Construction du programme…']; let k = 0;
+  $('sStep').textContent = steps[0]; sShow('sLoad');
+  const iv = setInterval(() => $('sStep').textContent = steps[++k % steps.length], 3500);
+  try {
+    const { data, error } = await db.functions.invoke('sortie', { body: params });
+    if (error || !data || !data.plan) { let m = (data && data.error) || (error && error.message) || 'Réponse vide'; try { m = (await error.context.json()).error || m; } catch {} throw new Error(m); }
+    const { data: row, error: e2 } = await db.from('sorties').insert({ params, plan: data.plan }).select().single();
+    if (e2) throw e2;
+    await loadSorties(); showPlan(row);
+  } catch (e) { alert('L’assistant n’a pas pu répondre : ' + (e.message || e)); sShow('sHome'); }
+  finally { clearInterval(iv); }
 };
 
 // --- Mise en forme ---
