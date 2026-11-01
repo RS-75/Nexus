@@ -188,35 +188,62 @@ body{background:radial-gradient(80% 40% at 50% 100%,rgba(29,78,216,.38),transpar
 .tab-bubble.go i{animation:bubbleStretch .55s cubic-bezier(.3,1.3,.5,1)}
 @keyframes bubbleStretch{0%{transform:scale(1,1)}35%{transform:scale(1.22,.9)}70%{transform:scale(.97,1.05)}100%{transform:scale(1,1)}}
 .kb #tabs{display:none}
-#sortie{display:none;position:absolute;inset:0;z-index:10;flex-direction:column;background:rgba(4,7,15,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+#sortie{display:none;position:absolute;inset:0;z-index:10;flex-direction:column;background:rgba(4,7,15,.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
 #sortie.on{display:flex}
-#sHead{display:flex;align-items:center;gap:12px;padding:14px 16px;font-weight:600;font-size:17px}
-#sBack{background:none;border:0;cursor:pointer;color:#7cb2ff;padding:0 6px 2px 0}#sBack .i{width:26px;height:26px}
-#sBody{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 18px calc(34px + env(safe-area-inset-bottom))}
+#sHead{flex:none;display:flex;align-items:center;gap:8px;padding:12px 14px;padding-top:calc(12px + env(safe-area-inset-top,0px));font-weight:600;font-size:17px}
+#sBack{background:none;border:0;cursor:pointer;color:#7cb2ff;padding:0 6px 2px 0;display:grid;place-items:center}#sBack .i{width:26px;height:26px}
+#sBody{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:6px 18px calc(36px + env(safe-area-inset-bottom,0px))}
 #sLoad,#sPlan{display:none}
-.sHero h2{font-size:clamp(28px,8.5vw,36px);letter-spacing:-.02em;line-height:1.1;background:linear-gradient(120deg,#fff,#7dd3fc 70%);-webkit-background-clip:text;background-clip:text;color:transparent}
-.sHero p{color:var(--dim);margin:8px 0 18px;line-height:1.5}
-.sform{padding:18px;display:grid;gap:10px}.sform label{font-size:11.5px;color:var(--dim);letter-spacing:.06em;text-transform:uppercase}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.row2>div{display:grid;gap:6px;align-content:start}
-.chips2{display:flex;flex-wrap:wrap;gap:7px}
-.chips2 button,.ghostb{background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:20px;padding:7px 13px;font-size:13.5px;cursor:pointer;color:var(--txt)}
-.chips2 button.on{background:rgba(56,189,248,.25);border-color:rgba(125,211,252,.6);box-shadow:0 0 14px rgba(56,189,248,.3)}
-.ghostb{padding:12px;width:100%;font-size:15px;border-radius:14px}.ghostb.on{background:rgba(56,189,248,.25);border-color:rgba(125,211,252,.6)}
-.big{display:flex;align-items:center;justify-content:center;gap:9px;padding:16px;font-size:16px;margin-top:6px;box-shadow:0 8px 28px rgba(37,99,235,.45)}
-#sortie h3{margin:26px 0 12px;font-size:18px}.sm{color:var(--dim);font-size:14px;line-height:1.5}
+.so-hero h2{font-size:clamp(30px,9vw,38px);letter-spacing:-.025em;line-height:1.08;background:linear-gradient(120deg,#fff,#7dd3fc 70%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.so-hero p{color:var(--dim);margin:10px 0 0;line-height:1.5;font-size:15px}
+.so-quota{margin:14px 0 18px;display:inline-block;font-size:12.5px;color:#bfe3ff;padding:6px 12px;border-radius:20px;background:rgba(56,189,248,.14);border:1px solid rgba(125,211,252,.28)}
+.so-card{padding:18px;display:flex;flex-direction:column;gap:18px}
+.so-f{display:flex;flex-direction:column;gap:8px;min-width:0}
+.so-f>label{font-size:11.5px;line-height:1;color:var(--dim);letter-spacing:.06em;text-transform:uppercase}
+.so-f>label span{text-transform:none;letter-spacing:0;opacity:.7;margin-left:6px}
+.so-g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}
+#sortie input{display:block;width:100%;min-width:0;height:48px;padding:0 14px;border-radius:14px;-webkit-appearance:none;appearance:none;font-size:16px}
+#sortie input::-webkit-date-and-time-value{text-align:left;min-height:1.2em}
+#sortie input::-webkit-datetime-edit{padding:0}
+.so-chips{display:flex;flex-wrap:wrap;gap:8px}
+.so-chips button{height:34px;padding:0 14px;border-radius:17px;background:rgba(255,255,255,.07);border:1px solid var(--line);font-size:13.5px;color:var(--txt);cursor:pointer}
+.so-step,.so-seg{height:48px;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.35)}
+.so-step{display:grid;grid-template-columns:48px minmax(0,1fr) 48px;align-items:center;overflow:hidden}
+.so-step button{height:48px;background:none;border:0;color:var(--txt);font-size:22px;cursor:pointer}
+.so-step output{text-align:center;font-weight:700;font-size:17px}
+.so-seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px}
+.so-seg button{border:0;border-radius:10px;background:none;color:var(--dim);font-size:15px;font-weight:600;cursor:pointer;transition:.2s}
+.so-seg button.on{background:linear-gradient(135deg,rgba(37,99,235,.9),rgba(56,189,248,.7));color:#fff;box-shadow:0 0 16px rgba(56,189,248,.35)}
+.so-go{height:54px;display:flex;align-items:center;justify-content:center;gap:9px;font-size:16px;border-radius:16px;padding:0;box-shadow:0 8px 28px rgba(37,99,235,.45)}
+.so-h{margin:28px 0 12px;font-size:18px}.so-sm{color:var(--dim);font-size:14px;line-height:1.5}
 #sLoad{text-align:center;padding-top:18vh}
 .orb{width:84px;height:84px;margin:0 auto 28px;border-radius:50%;background:conic-gradient(from 0deg,#2563eb,#38bdf8,#a78bfa,#2563eb);animation:spin 1.6s linear infinite;box-shadow:0 0 50px rgba(56,189,248,.5);-webkit-mask:radial-gradient(circle,transparent 56%,#000 58%);mask:radial-gradient(circle,transparent 56%,#000 58%)}
 @keyframes spin{to{transform:rotate(360deg)}}#sStep{font-size:17px;font-weight:600;margin-bottom:6px}
-.rscroll{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 -18px;padding:4px 18px 10px}
-.rcard{flex:0 0 80%;scroll-snap-align:start;padding:16px;display:grid;gap:7px;align-content:start}
-.rt{display:flex;justify-content:space-between;gap:10px;font-size:17px}.rt span{color:#7cc4ff;font-weight:700}.rs{font-size:13px;color:#8cc0ff}.rcard p{color:var(--dim);font-size:14px;line-height:1.5}
-.tg{font-size:12.5px;padding:5px 10px;border-radius:10px;background:rgba(56,189,248,.16);border:1px solid rgba(125,211,252,.3);width:fit-content}.tg.hot{background:rgba(244,114,182,.16);border-color:rgba(244,114,182,.4)}
-.lks{display:flex;gap:8px;flex-wrap:wrap}.lk{display:inline-flex;align-items:center;font-size:13px;font-weight:600;color:#bfe3ff;text-decoration:none;padding:6px 12px;border-radius:14px;background:rgba(59,130,246,.25);border:1px solid var(--line)}
-.tl{margin-left:6px;padding-left:22px;border-left:2px solid rgba(124,178,255,.25)}
-.ev{position:relative;padding:0 0 20px}.ev::before{content:"";position:absolute;left:-29px;top:4px;width:12px;height:12px;border-radius:50%;background:#38bdf8;box-shadow:0 0 12px #38bdf8}
-.ev .t{font-size:13px;color:#7cc4ff;font-weight:700}.ev b{display:block;font-size:17px;margin:2px 0}.ev p{color:var(--dim);font-size:14px;line-height:1.5}
-.tj{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12.5px;color:var(--dim);margin:-6px 0 14px}.tj .i{width:14px;height:14px}
+.so-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.so-meta span{font-size:12.5px;padding:6px 12px;border-radius:16px;background:rgba(255,255,255,.07);border:1px solid var(--line);color:#cfe6ff}
+.so-note{margin-top:14px;padding:12px 14px;border-radius:14px;font-size:13.5px;line-height:1.45;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.35);color:#fde68a}
+.so-scroll{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 18px;margin:0 -18px;padding:2px 18px 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.so-scroll::-webkit-scrollbar{display:none}
+.so-rc{flex:0 0 min(300px,82%);scroll-snap-align:start;padding:16px;display:flex;flex-direction:column;gap:9px}
+.so-rt{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.so-rt b{font-size:17px;line-height:1.25;min-width:0;overflow-wrap:anywhere}.so-rt span{flex:none;color:#7cc4ff;font-weight:700}
+.so-rs{font-size:13px;color:#8cc0ff}.so-rc p{color:var(--dim);font-size:14px;line-height:1.5}
+.so-tg{font-size:12.5px;line-height:1.35;padding:6px 10px;border-radius:10px;background:rgba(56,189,248,.16);border:1px solid rgba(125,211,252,.3);width:fit-content;max-width:100%}.so-tg.hot{background:rgba(244,114,182,.16);border-color:rgba(244,114,182,.4)}
+.so-lks{display:flex;gap:8px;margin-top:auto;padding-top:4px}
+.so-lk{flex:1;min-width:0;height:36px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#bfe3ff;text-decoration:none;border-radius:12px;background:rgba(59,130,246,.25);border:1px solid var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 10px}
+.so-row{display:grid;grid-template-columns:50px 16px minmax(0,1fr);column-gap:12px}
+.so-time{font-size:13px;font-weight:700;color:#7cc4ff;text-align:right;line-height:1.2;padding-top:3px}.so-time small{display:block;font-weight:500;color:var(--dim);font-size:11.5px;margin-top:2px}
+.so-rail{position:relative}
+.so-rail::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:2px;margin-left:-1px;background:rgba(124,178,255,.28)}
+.so-rail i{position:absolute;left:50%;top:4px;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:#38bdf8;box-shadow:0 0 12px #38bdf8;z-index:1}
+.so-row:first-child .so-rail::before{top:10px}.so-row:last-child .so-rail::before{bottom:calc(100% - 10px)}
+.so-tc{min-width:0;padding-bottom:20px}.so-tc b{display:block;font-size:16.5px;line-height:1.25;overflow-wrap:anywhere}.so-tc p{color:var(--dim);font-size:14px;line-height:1.45;margin-top:3px;overflow-wrap:anywhere}
+.so-tj .so-tc{padding-bottom:14px;display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;color:var(--dim);font-size:12.5px}.so-tj .i{width:14px;height:14px}
+.so-tj .so-lk{flex:none;height:28px;font-size:12px;border-radius:10px}
+.so-src{display:flex;flex-wrap:wrap;gap:8px}.so-src a{max-width:100%;font-size:12.5px;color:#9fc4f0;text-decoration:none;padding:6px 11px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #sPlan ul{padding-left:20px;color:var(--dim);line-height:1.6;font-size:14px}
+.so-vote{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.so-vote button{height:48px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid var(--line);color:var(--txt);font-size:15px;font-weight:600;cursor:pointer}
+.so-vote button.on{background:linear-gradient(135deg,rgba(37,99,235,.9),rgba(56,189,248,.7));border-color:transparent}
+.so-del{margin-top:14px;width:100%;height:44px;border-radius:14px;background:none;border:1px solid rgba(248,113,113,.35);color:#fca5a5;font-size:14px;cursor:pointer}
 /* ===== Tamil TV ===== */
 #ttv{display:none;position:absolute;inset:0;z-index:11;flex-direction:column;background:rgba(4,7,15,.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
 #ttv.on{display:flex}
@@ -362,20 +389,26 @@ body{background:radial-gradient(80% 40% at 50% 100%,rgba(29,78,216,.38),transpar
   <div id="sortie"><div id="sHead"><button id="sBack" data-i="back"></button><span id="sTitle">Sortie</span></div>
     <div id="sBody">
       <div id="sHome">
-        <div class="sHero"><h2>Organise une sortie</h2><p>Dis ce que vous aimez : l’IA trouve les meilleures adresses et construit votre journée, trajets compris.</p></div>
-        <div class="glass sform">
-          <label for="sEnvie">Envie</label><input id="sEnvie" placeholder="Burgers, sushis, brunch…" autocomplete="off">
-          <div class="chips2" id="sEnvies"></div>
-          <div class="row2"><div><label for="sLieu">Où</label><input id="sLieu" value="Paris"></div><div><label for="sNb">Personnes</label><input id="sNb" type="number" inputmode="numeric" min="1" value="4"></div></div>
-          <div class="row2"><div><label for="sDate">Date</label><input id="sDate" type="date"></div><div><label>Budget</label>
-            <div class="chips2" id="sBud"><button type="button" data-v="€">€</button><button type="button" data-v="€€" class="on">€€</button><button type="button" data-v="€€€">€€€</button></div></div></div>
-          <div class="row2"><div><label for="sDeb">Début</label><input id="sDeb" type="time" value="14:00"></div><div><label for="sFin">Fin</label><input id="sFin" type="time" value="23:00"></div></div>
-          <label for="sPlus">Autres envies (facultatif)</label><input id="sPlus" placeholder="balade, musée, bowling, bar…" autocomplete="off">
-          <button class="btn big" id="sGo" data-i="sparkle">Laisser l’IA organiser</button>
+        <header class="so-hero"><h2>Organise<br>une sortie</h2><p>Dis ce que vous aimez : l’IA trouve les adresses et construit votre journée, trajets compris.</p></header>
+        <div class="so-quota" id="sQuota"></div>
+        <div class="glass so-card">
+          <div class="so-f"><label for="sEnvie">Envie</label><input id="sEnvie" placeholder="Burgers, sushis, brunch…" autocomplete="off"><div class="so-chips" id="sEnvies"></div></div>
+          <div class="so-f"><label for="sLieu">Lieu</label><input id="sLieu" value="Paris" autocomplete="off"></div>
+          <div class="so-g2">
+            <div class="so-f"><label for="sDate">Date</label><input id="sDate" type="date"></div>
+            <div class="so-f"><label>Personnes</label><div class="so-step"><button type="button" id="sMinus" aria-label="Moins">−</button><output id="sNbv">4</output><button type="button" id="sPlusb" aria-label="Plus">+</button></div></div>
+          </div>
+          <div class="so-g2">
+            <div class="so-f"><label for="sDeb">De</label><input id="sDeb" type="time" value="14:00"></div>
+            <div class="so-f"><label for="sFin">À</label><input id="sFin" type="time" value="23:00"></div>
+          </div>
+          <div class="so-f"><label>Budget</label><div class="so-seg" id="sBud"><button type="button" data-v="€">€</button><button type="button" data-v="€€" class="on">€€</button><button type="button" data-v="€€€">€€€</button></div></div>
+          <div class="so-f"><label for="sPlus">Autres envies<span>facultatif</span></label><input id="sPlus" placeholder="balade, musée, bowling, bar…" autocomplete="off"></div>
+          <button class="btn so-go" id="sGo" data-i="sparkle">Laisser l’IA organiser</button>
         </div>
-        <h3>Sorties du groupe</h3><div id="sList"></div>
+        <h3 class="so-h">Sorties du groupe</h3><div id="sList"></div>
       </div>
-      <div id="sLoad"><div class="orb"></div><div id="sStep">Recherche des meilleures adresses…</div><p class="sm">Ça prend environ une minute.</p></div>
+      <div id="sLoad"><div class="orb"></div><div id="sStep">Recherche des meilleures adresses…</div><p class="so-sm">Ça prend moins d’une minute.</p></div>
       <div id="sPlan"></div>
     </div></div>
   <div id="guide"><div class="glass gbox"><h2>Bienvenue sur Nexus</h2><p>Votre espace privé entre amis. Voici l’essentiel.</p>
@@ -822,58 +855,70 @@ $('shAdd').onclick = async () => {
 
 // --- Sortie : l'IA organise la journée ---
 const ENVIES = ['Burgers', 'Pizza', 'Sushi', 'Brunch', 'Street food', 'Box à partager', 'Coréen', 'Tacos'];
-let sBud = '€€', sRows = [], sVotes = [];
+const DAILY = 3; // doit correspondre à SORTIE_PER_USER dans la fonction
+let sBud = '€€', sN = 4, sRows = [], sVotes = [];
 const safeUrl = u => /^https?:\/\//.test(u || '') ? esc(u) : '';
 const gmap = q => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
 const gdir = (a, b) => 'https://www.google.com/maps/dir/?api=1&travelmode=transit&origin=' + encodeURIComponent(a) + '&destination=' + encodeURIComponent(b);
 const fmtDate = d => d ? new Date(d + 'T12:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) : '';
 function sShow(v) { ['sHome', 'sLoad', 'sPlan'].forEach(x => $(x).style.display = x === v ? 'block' : 'none'); $('sTitle').textContent = v === 'sPlan' ? 'Programme' : 'Sortie'; $('sBody').scrollTop = 0; }
-function openSortie() { $('sortie').classList.add('on'); sShow('sHome'); if (!$('sDate').value) $('sDate').value = new Date().toISOString().slice(0, 10); loadSorties(); }
+function sLeft() { const d = new Date(); d.setUTCHours(0, 0, 0, 0); return Math.max(0, DAILY - sRows.filter(r => r.user_id === me.id && new Date(r.created_at) >= d).length); }
+function renderQuota() { const n = sLeft(); $('sQuota').textContent = n ? n + ' sortie' + (n > 1 ? 's' : '') + ' IA restante' + (n > 1 ? 's' : '') + ' aujourd’hui' : 'Plus de sortie IA aujourd’hui, reviens demain'; }
+function openSortie() { $('sortie').classList.add('on'); sShow('sHome'); if (!$('sDate').value) $('sDate').value = new Date().toISOString().slice(0, 10); renderQuota(); loadSorties(); }
 $('sBack').onclick = () => { if ($('sPlan').style.display === 'block') sShow('sHome'); else $('sortie').classList.remove('on'); };
 $('sEnvies').innerHTML = ENVIES.map(e => `<button type="button">${e}</button>`).join('');
 $('sEnvies').onclick = e => { const b = e.target.closest('button'); if (!b) return; const i = $('sEnvie'); i.value = i.value.includes(b.textContent) ? i.value : (i.value ? i.value + ', ' : '') + b.textContent; };
 $('sBud').onclick = e => { const b = e.target.closest('button'); if (!b) return; sBud = b.dataset.v; $('sBud').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); };
+$('sMinus').onclick = () => { sN = Math.max(1, sN - 1); $('sNbv').textContent = sN; };
+$('sPlusb').onclick = () => { sN = Math.min(30, sN + 1); $('sNbv').textContent = sN; };
 async function loadSorties() {
   const [a, b] = await Promise.all([db.from('sorties').select('*').order('created_at', { ascending: false }).limit(20), db.from('sortie_votes').select('*')]);
-  sRows = a.data || []; sVotes = b.data || []; renderSList();
+  sRows = a.data || []; sVotes = b.data || []; renderSList(); renderQuota();
 }
 function renderSList() {
   $('sList').innerHTML = sRows.length ? sRows.map(r => `<button class="card glass" data-id="${r.id}"><div class="ico">${ic('compass')}</div><div><b>${esc(r.plan.titre || 'Sortie')}</b><span class="d">${esc(names[r.user_id] || '?')} · ${esc(fmtDate(r.params && r.params.date))}</span></div><span class="chev">${ic('next')}</span></button>`).join('')
-    : '<p class="sm">Aucune sortie pour l’instant. Lance la première !</p>';
+    : '<p class="so-sm">Aucune sortie pour l’instant. Lance la première !</p>';
   $('sList').querySelectorAll('.card').forEach(b => b.onclick = () => showPlan(sRows.find(r => String(r.id) === b.dataset.id)));
 }
 function showPlan(r) {
   if (!r) return;
   const p = r.plan, q = r.params || {}, prog = p.programme || [];
-  const rs = (p.restaurants || []).map(x => `<div class="rcard glass"><div class="rt"><b>${esc(x.nom)}</b><span>${esc(x.prix || '')}</span></div>
-    <div class="rs">${esc([x.specialite, x.quartier].filter(Boolean).join(' · '))}</div><p>${esc(x.pourquoi || '')}</p>
-    ${x.menu_box ? `<div class="tg">${esc(x.menu_box)}</div>` : ''}${x.tendance ? `<div class="tg hot">${esc(x.tendance)}</div>` : ''}
-    <div class="lks"><a class="lk" href="${gmap((x.nom || '') + ' ' + (x.adresse || ''))}" target="_blank" rel="noopener">Plan</a>${safeUrl(x.source) ? `<a class="lk" href="${safeUrl(x.source)}" target="_blank" rel="noopener">Source</a>` : ''}</div></div>`).join('');
+  const rs = (p.restaurants || []).map(x => `<div class="so-rc glass"><div class="so-rt"><b>${esc(x.nom)}</b><span>${esc(x.prix || '')}</span></div>
+    <div class="so-rs">${esc([x.specialite, x.quartier].filter(Boolean).join(' · '))}</div><p>${esc(x.pourquoi || '')}</p>
+    ${x.menu_box ? `<div class="so-tg">${esc(x.menu_box)}</div>` : ''}${x.tendance ? `<div class="so-tg hot">${esc(x.tendance)}</div>` : ''}
+    <div class="so-lks"><a class="so-lk" href="${gmap((x.nom || '') + ' ' + (x.adresse || ''))}" target="_blank" rel="noopener">Plan</a>${safeUrl(x.source) ? `<a class="so-lk" href="${safeUrl(x.source)}" target="_blank" rel="noopener">Source</a>` : ''}</div></div>`).join('');
   const tl = prog.map((e, i) => {
     const t = e.trajet, prev = prog[i - 1];
-    const tj = t && t.minutes ? `<div class="tj">${ic('route')} ${esc(t.minutes)} min · ${esc(t.mode || '')}${t.detail ? ' · ' + esc(t.detail) : ''}${prev ? ` <a class="lk" href="${gdir(prev.adresse || prev.lieu || '', e.adresse || e.lieu || '')}" target="_blank" rel="noopener">Itinéraire</a>` : ''}</div>` : '';
-    return `${tj}<div class="ev"><div class="t">${esc(e.heure || '')}${e.fin ? ' – ' + esc(e.fin) : ''}</div><b>${esc(e.titre || e.lieu || '')}</b><p>${esc([e.lieu, e.adresse].filter(Boolean).join(' · '))}</p>${e.detail ? `<p>${esc(e.detail)}</p>` : ''}</div>`;
+    const tj = t && t.minutes ? `<div class="so-row so-tj"><div></div><div class="so-rail"></div><div class="so-tc">${ic('route')}<span>${esc(t.minutes)} min · ${esc(t.mode || '')}${t.detail ? ' · ' + esc(t.detail) : ''}</span>${prev ? `<a class="so-lk" href="${gdir(prev.adresse || prev.lieu || '', e.adresse || e.lieu || '')}" target="_blank" rel="noopener">Itinéraire</a>` : ''}</div></div>` : '';
+    return tj + `<div class="so-row"><div class="so-time">${esc(e.heure || '')}${e.fin ? `<small>${esc(e.fin)}</small>` : ''}</div><div class="so-rail"><i></i></div><div class="so-tc"><b>${esc(e.titre || e.lieu || '')}</b><p>${esc([e.lieu, e.adresse].filter(Boolean).join(' · '))}</p>${e.detail ? `<p>${esc(e.detail)}</p>` : ''}</div></div>`;
   }).join('');
+  const src = (p.sources || []).filter(x => safeUrl(x.uri)).map(x => `<a href="${safeUrl(x.uri)}" target="_blank" rel="noopener">${esc(x.title || 'Source')}</a>`).join('');
   const yes = sVotes.filter(v => v.sortie_id === r.id && v.vote === 'oui').map(v => names[v.user_id] || '?');
   const mine = sVotes.find(v => v.sortie_id === r.id && v.user_id === me.id);
-  $('sPlan').innerHTML = `<div class="sHero"><h2>${esc(p.titre || 'Sortie')}</h2><p>${esc(p.resume || '')}<br>${esc(fmtDate(q.date))} · ${esc(q.debut || '')}–${esc(q.fin || '')} · ${esc(q.personnes || '')} pers. · proposé par ${esc(names[r.user_id] || '?')}</p></div>
-    <h3>Où manger</h3><div class="rscroll">${rs}</div>
-    <h3>Programme de la journée</h3><div class="tl">${tl}</div>
-    ${(p.conseils || []).length ? `<h3>Bon à savoir</h3><ul>${p.conseils.map(c => `<li>${esc(c)}</li>`).join('')}</ul>` : ''}
-    <div class="glass sform" style="margin-top:24px"><b>Tu viens ?</b>
-      <div class="row2"><button class="ghostb${mine && mine.vote === 'oui' ? ' on' : ''}" data-v="oui">Je viens</button><button class="ghostb${mine && mine.vote === 'non' ? ' on' : ''}" data-v="non">Pas dispo</button></div>
-      <p class="sm">${yes.length ? 'Partants : ' + esc(yes.join(', ')) : 'Personne n’a encore répondu.'}</p>
-      <button class="btn" id="sShare">Partager dans Général</button></div>`;
+  $('sPlan').innerHTML = `<header class="so-hero"><h2>${esc(p.titre || 'Sortie')}</h2><p>${esc(p.resume || '')}</p>
+      <div class="so-meta"><span>${esc(fmtDate(q.date))}</span><span>${esc(q.debut || '')} – ${esc(q.fin || '')}</span><span>${esc(q.personnes || '')} pers.</span><span>par ${esc(names[r.user_id] || '?')}</span></div>
+      ${p.verif ? '<div class="so-note">Adresses proposées sans recherche web (quota de recherche atteint) : vérifie les horaires et l’ouverture avant d’y aller.</div>' : ''}</header>
+    <h3 class="so-h">Où manger</h3><div class="so-scroll">${rs}</div>
+    <h3 class="so-h">Programme de la journée</h3><div>${tl}</div>
+    ${(p.conseils || []).length ? `<h3 class="so-h">Bon à savoir</h3><ul>${p.conseils.map(c => `<li>${esc(c)}</li>`).join('')}</ul>` : ''}
+    ${src ? `<h3 class="so-h">Sources</h3><div class="so-src">${src}</div>` : ''}
+    <h3 class="so-h">Tu viens ?</h3>
+    <div class="so-vote"><button data-v="oui" class="${mine && mine.vote === 'oui' ? 'on' : ''}">Je viens</button><button data-v="non" class="${mine && mine.vote === 'non' ? 'on' : ''}">Pas dispo</button></div>
+    <p class="so-sm" style="margin:12px 0 16px">${yes.length ? 'Partants : ' + esc(yes.join(', ')) : 'Personne n’a encore répondu.'}</p>
+    <button class="btn so-go" id="sShare">Partager dans Général</button>
+    ${r.user_id === me.id ? '<button class="so-del" id="sDel">Supprimer cette sortie</button>' : ''}`;
   $('sPlan').querySelectorAll('[data-v]').forEach(b => b.onclick = async () => {
     await db.from('sortie_votes').upsert({ sortie_id: r.id, user_id: me.id, vote: b.dataset.v }, { onConflict: 'sortie_id,user_id' });
     await loadSorties(); showPlan(sRows.find(x => x.id === r.id));
   });
   $('sShare').onclick = async () => { channel = 'general'; await send({ content: 'Sortie proposée : ' + (p.titre || '') + ' (' + fmtDate(q.date) + '). Ouvre Salons › Sortie pour voir le programme et dire si tu viens.' }); toast('Partagé dans Général'); };
+  if ($('sDel')) $('sDel').onclick = async () => { if (!confirm('Supprimer cette sortie ?')) return; await db.from('sorties').delete().eq('id', r.id); await loadSorties(); sShow('sHome'); };
   sShow('sPlan');
 }
 $('sGo').onclick = async () => {
-  const params = { envie: $('sEnvie').value.trim(), lieu: $('sLieu').value.trim() || 'Paris', personnes: +$('sNb').value || 4, date: $('sDate').value, debut: $('sDeb').value, fin: $('sFin').value, budget: sBud, plus: $('sPlus').value.trim() };
+  const params = { envie: $('sEnvie').value.trim(), lieu: $('sLieu').value.trim() || 'Paris', personnes: sN, date: $('sDate').value, debut: $('sDeb').value, fin: $('sFin').value, budget: sBud, plus: $('sPlus').value.trim() };
   if (!params.envie) return alert('Dis-nous ce que vous avez envie de manger.');
+  if (!sLeft()) return alert('Tu as utilisé tes sorties IA du jour. Reviens demain !');
   const steps = ['Recherche des meilleures adresses…', 'Vérification des avis et des tendances…', 'Calcul des trajets…', 'Construction du programme…']; let k = 0;
   $('sStep').textContent = steps[0]; sShow('sLoad');
   const iv = setInterval(() => $('sStep').textContent = steps[++k % steps.length], 3500);
