@@ -924,7 +924,12 @@ $('sGo').onclick = async () => {
   const iv = setInterval(() => $('sStep').textContent = steps[++k % steps.length], 3500);
   try {
     const { data, error } = await db.functions.invoke('sortie', { body: params });
-    if (error || !data || !data.plan) { let m = (data && data.error) || (error && error.message) || 'Réponse vide'; try { m = (await error.context.json()).error || m; } catch {} throw new Error(m); }
+    if (error || !data || !data.plan) {
+      let m = (data && data.error) || (error && error.message) || 'Réponse vide';
+      try { m = (await error.context.json()).error || m; } catch {}
+      if (error && error.name === 'FunctionsFetchError') m = 'La fonction « sortie » est injoignable. Vérifie dans Supabase (Edge Functions) qu’elle est bien déployée sous le nom exact « sortie ».';
+      throw new Error(m);
+    }
     const { data: row, error: e2 } = await db.from('sorties').insert({ params, plan: data.plan }).select().single();
     if (e2) throw e2;
     await loadSorties(); showPlan(row);
