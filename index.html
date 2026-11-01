@@ -856,6 +856,7 @@ $('shAdd').onclick = async () => {
 // --- Sortie : l'IA organise la journée ---
 const ENVIES = ['Burgers', 'Pizza', 'Sushi', 'Brunch', 'Street food', 'Box à partager', 'Coréen', 'Tacos'];
 const DAILY = 3; // doit correspondre à SORTIE_PER_USER dans la fonction
+const SORTIE_FN = 'sortie'; // nom de la fonction Supabase qui contient le code de l'assistant Sortie
 let sBud = '€€', sN = 4, sRows = [], sVotes = [];
 const safeUrl = u => /^https?:\/\//.test(u || '') ? esc(u) : '';
 const gmap = q => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
@@ -923,11 +924,11 @@ $('sGo').onclick = async () => {
   $('sStep').textContent = steps[0]; sShow('sLoad');
   const iv = setInterval(() => $('sStep').textContent = steps[++k % steps.length], 3500);
   try {
-    const { data, error } = await db.functions.invoke('sortie', { body: params });
+    const { data, error } = await db.functions.invoke(SORTIE_FN, { body: params });
     if (error || !data || !data.plan) {
       let m = (data && data.error) || (error && error.message) || 'Réponse vide';
       try { m = (await error.context.json()).error || m; } catch {}
-      if (error && error.name === 'FunctionsFetchError') m = 'La fonction « sortie » est injoignable. Vérifie dans Supabase (Edge Functions) qu’elle est bien déployée sous le nom exact « sortie ».';
+      if (error && error.name === 'FunctionsFetchError') m = 'La fonction « ' + SORTIE_FN + ' » est injoignable. Vérifie dans Supabase (Edge Functions) qu’elle est bien déployée sous ce nom exact.';
       throw new Error(m);
     }
     const { data: row, error: e2 } = await db.from('sorties').insert({ params, plan: data.plan }).select().single();
