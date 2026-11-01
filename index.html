@@ -542,13 +542,15 @@ async function start(user) {
   $('auth').style.display = 'none'; $('app').style.display = 'flex';
   await loadProfiles(); render(); if (!cch) setupCall(); if (!wch) setupWatch(); if (!gch) setupGames(); if (!localStorage.getItem('guideSeen')) $('guide').classList.add('on');
   computeUnread(); loadShows(); initPush(); openFromUrl();
-  db.channel('live')
+  db.channel('live-msg')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, p => {
       const m = p.new;
       if ($('chat').classList.contains('on') && m.channel === channel) { addMsg(m); markSeen(channel); }
       else if (m.user_id !== me.id) { unread[m.channel] = (unread[m.channel] || 0) + 1; render(); }
     })
     .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages' }, p => { const r = $('m-' + p.old.id); if (r) r.remove(); })
+    .subscribe();
+  db.channel('live-rx')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'reactions' }, p => {
       const r = p.new, l = reacts[r.message_id] = reacts[r.message_id] || [];
       if (!l.some(x => x.user_id === r.user_id && x.emoji === r.emoji)) { l.push(r); rxRender(r.message_id); }
@@ -556,6 +558,8 @@ async function start(user) {
     .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'reactions' }, p => {
       const r = p.old; if (reacts[r.message_id]) { reacts[r.message_id] = reacts[r.message_id].filter(x => !(x.user_id === r.user_id && x.emoji === r.emoji)); rxRender(r.message_id); }
     })
+    .subscribe();
+  db.channel('live-misc')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'shows' }, () => loadShows())
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'sorties' }, p => {
       if ($('sortie').classList.contains('on')) loadSorties();
@@ -938,6 +942,14 @@ $('sGo').onclick = async () => {
   finally { clearInterval(iv); }
 };
 
+// --- Rattrapage : si le temps réel est coupé, on récupère les nouveaux messages toutes les 4 s ---
+let lastId = 0;
+setInterval(async () => {
+  if (!me || document.hidden || !$('chat').classList.contains('on')) return;
+  const ch = channel, { data } = await db.from('messages').select('*').eq('channel', ch).gt('id', lastId).order('id');
+  if (ch === channel && data && data.length) { data.forEach(addMsg); markSeen(ch); }
+}, 4000);
+
 // --- Mise en forme ---
 const fmt = h => h.replace(/\|\|(.+?)\|\|/g, '<span class="sp">$1</span>').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
   .replace(/(^|\s)\*(.+?)\*/g, '$1<em>$2</em>').replace(/`(.+?)`/g, '<code>$1</code>');
@@ -1028,7 +1040,7 @@ async function openChat(id, label) {
   $('chat').classList.add('on'); gapColor();
   const { data } = await db.from('messages').select('*').eq('channel', id).order('created_at').limit(200);
   if (!data || !data.length) $('msgs').innerHTML = '<div class="empty">Aucun message.<br>Lance la conversation</div>';
-  msgCache = {}; reacts = {}; setReply(null);
+  msgCache = {}; reacts = {}; lastId = 0; setReply(null);
   (data || []).forEach(addMsg);
   stick = true; scrollEnd();
   markSeen(id); render();
@@ -1092,7 +1104,7 @@ async function delMsg(id) {
 function addMsg(m) {
   const e0 = $('msgs').querySelector('.empty'); if (e0) e0.remove();
   if ($('m-' + m.id)) return;
-  msgCache[m.id] = m;
+  msgCache[m.id] = m; lastId = Math.max(lastId, m.id);
   const mine = m.user_id === me.id, row = document.createElement('div');
   row.className = 'row' + (mine ? ' me' : ''); row.id = 'm-' + m.id;
   const who = !mine && !channel.startsWith('dm:') ? `<b>${esc(names[m.user_id] || '?')}</b>` : '';
@@ -1119,8 +1131,10 @@ function addMsg(m) {
   $('msgs').append(row); rxRender(m.id); if (stick || mine) scrollEnd();
 }
 async function send(f) {
-  const { error } = await db.from('messages').insert({ channel, reply_to: replyTo ? replyTo.id : null, ...f });
-  if (error) alert(error.message); else setReply(null);
+  const { data, error } = await db.from('messages').insert({ channel, reply_to: replyTo ? replyTo.id : null, ...f }).select().single();
+  if (error) return alert(error.message);
+  setReply(null);
+  if (data && $('chat').classList.contains('on') && data.channel === channel) { addMsg(data); markSeen(channel); }
 }
 $('imgBtn').onclick = () => $('imgIn').click();
 $('imgIn').onchange = async e => {
