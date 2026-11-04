@@ -1707,20 +1707,35 @@ function tttBoard(R, canPlay) {
     return { id: l.k + ':' + e.id, lg: l, date: new Date(e.date), st: t.state || 'pre', det: t.shortDetail || '', h: T(h), a: T(a) };
   }
   async function loadMatches() {
-    const rng = ymd(day(-2)) + '-' + ymd(day(5));
+    const rng = ymd(day(-1)) + '-' + ymd(day(1));
     const res = await Promise.all(LEAGUES.map(l => getJSON(API + l.k + '/scoreboard?dates=' + rng + '&limit=200')
       .then(j => (j.events || []).map(e => parse(e, l))).catch(() => null)));
     okM = res.some(Boolean);
-    if (okM || !matches.length) matches = [].concat(...res.map(r => r || []));
+    const td = new Date().toDateString();
+    if (okM || !matches.length) matches = [].concat(...res.map(r => r || [])).filter(m => m.date.toDateString() === td);
   }
+const FEEDS = [
+    { n: 'L’Équipe', u: 'https://dwh.lequipe.fr/api/edito/rss?path=/Football/' },
+    { n: 'RMC Sport', u: 'https://rmcsport.bfmtv.com/rss/football/' },
+    { n: 'Le Monde', u: 'https://www.lemonde.fr/football/rss_full.xml' },
+    { n: 'France Info', u: 'https://www.francetvinfo.fr/sports/foot.rss' }
+  ];
+  const KW = {
+    'uefa.champions': /ligue des champions|\bc1\b|champions league/i,
+    'esp.1': /liga|real madrid|bar[cç]a|barcelone|atl[eé]tico|espagn|s[eé]ville|villarreal/i,
+    'fra.1': /ligue 1|\bpsg\b|paris|marseille|\bom\b|lyon|monaco|lille|\blens\b|rennes|nice|nantes|strasbourg/i
+  };
+  const strip = h => String(h || '').replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+  const RSS = 'https://api.rss2json.com/v1/api.json?rss_url=';
   async function loadNews() {
-    const res = await Promise.all(LEAGUES.map(l => getJSON(API + l.k + '/news?limit=15').then(j => (j.articles || []).map(a => ({
-      lg: l, t: a.headline || '', p: new Date(a.published || a.lastModified || 0),
-      u: a.links && a.links.web && a.links.web.href, img: (a.images || [])[0] && a.images[0].url
+    const res = await Promise.all(FEEDS.map(f => getJSON(RSS + encodeURIComponent(f.u)).then(j => (j.items || []).map(a => ({
+      src: f.n, t: strip(a.title), d: strip(a.description), u: a.link,
+      p: new Date(String(a.pubDate || '').replace(' ', 'T') + 'Z'),
+      img: a.thumbnail || (a.enclosure && a.enclosure.link) || ''
     }))).catch(() => null)));
     okN = res.some(Boolean);
     const seen = new Set();
-    news = [].concat(...res.map(r => r || [])).filter(a => a.t && a.u && !seen.has(a.u) && seen.add(a.u)).sort((x, y) => y.p - x.p).slice(0, 24);
+    news = [].concat(...res.map(r => r || [])).filter(a => a.t && a.u && !seen.has(a.u) && seen.add(a.u)).sort((x, y) => (isNaN(y.p) ? 0 : y.p) - (isNaN(x.p) ? 0 : x.p)).slice(0, 40);
   }
   async function loadPicks() {
     const ids = matches.map(m => m.id);
@@ -1787,7 +1802,7 @@ function tttBoard(R, canPlay) {
     matches.forEach(m => { const r = res(m); if (!r) return; picks.filter(p => p.match_id === m.id).forEach(p => { const o = sc[p.user_id] = sc[p.user_id] || { ok: 0, n: 0 }; o.n++; if (p.pick === r) o.ok++; }); });
     const rows = Object.entries(sc).sort((a, b) => b[1].ok - a[1].ok || a[1].n - b[1].n);
     if (!rows.length) return '';
-    return `<h3 class="ft-h3" style="margin-top:22px">Classement des pronos</h3><div class="glass ft-lb">${rows.map(([id, o], i) => `<div class="r"><span style="width:20px;color:var(--dim)">${i + 1}</span>${avatar(names[id] || '?', 30, id)}<span>${esc(id === me.id ? 'Moi' : (names[id] || '?'))}</span><b>${o.ok}/${o.n}</b></div>`).join('')}</div><p class="ft-note">Pronostics justes sur les matchs terminés de la semaine.</p>`;
+    return `<h3 class="ft-h3" style="margin-top:22px">Classement des pronos du jour</h3><div class="glass ft-lb">${rows.map(([id, o], i) => `<div class="r"><span style="width:20px;color:var(--dim)">${i + 1}</span>${avatar(names[id] || '?', 30, id)}<span>${esc(id === me.id ? 'Moi' : (names[id] || '?'))}</span><b>${o.ok}/${o.n}</b></div>`).join('')}</div><p class="ft-note">Pronostics justes sur les matchs terminés aujourd’hui.</p>`;
   }
   function render() {
     const L = lf === 'all' ? LEAGUES : LEAGUES.filter(l => l.k === lf);
@@ -1796,7 +1811,7 @@ function tttBoard(R, canPlay) {
     if (first && !matches.length) { body.innerHTML = '<p class="ft-note">Chargement des scores…</p>'; return; }
     let h = '';
     if (local) h += '<div class="ft-warn">Les pronos ne sont pas encore partagés avec le groupe : crée la table « foot_picks » dans Supabase (voir le guide). En attendant, tes choix restent sur cet appareil.</div>';
-    h += '<h3 class="ft-h3">Scores et pronos</h3>';
+    h += '<h3 class="ft-h3">Matchs du jour</h3><p class="ft-note" style="margin-top:-6px">' + esc(new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })) + '</p>';
     let any = false;
     L.forEach(l => {
       const rank = m => m.st === 'in' ? 0 : m.st === 'pre' ? 1 : 2;
@@ -1804,11 +1819,11 @@ function tttBoard(R, canPlay) {
       if (!ms.length) return; any = true;
       h += `<div class="ft-lg" style="--c:${l.c}"><i></i>${esc(l.n)}</div>` + ms.map(card).join('');
     });
-    if (!any) h += `<p class="ft-note">${okM === false ? 'Impossible de charger les scores pour le moment. Réessaie avec le bouton d’actualisation.' : 'Aucun match ces jours-ci pour ce choix.'}</p>`;
+    if (!any) h += `<p class="ft-note">${okM === false ? 'Impossible de charger les scores pour le moment. Réessaie avec le bouton d’actualisation.' : 'Pas de match aujourd’hui pour ce choix.'}</p>`;
     h += leaderboard();
-    const ns = news.filter(a => lf === 'all' || a.lg.k === lf);
+    const ns = news.filter(a => lf === 'all' || KW[lf].test(a.t + ' ' + a.d)).slice(0, 24);
     h += '<h3 class="ft-h3" style="margin-top:26px">Actus foot</h3>';
-    h += ns.length ? ns.map(a => `<a class="glass ft-n" href="${safeUrl(a.u)}" target="_blank" rel="noopener">${safeUrl(a.img) ? `<img src="${safeUrl(a.img)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}<div class="ft-nt"><b>${esc(a.t)}</b><span><i class="ft-dot" style="--c:${a.lg.c}"></i>${esc(a.lg.s)} · ${esc(ago(a.p))}</span></div></a>`).join('')
+    h += ns.length ? ns.map(a => `<a class="glass ft-n" href="${safeUrl(a.u)}" target="_blank" rel="noopener">${safeUrl(a.img) ? `<img src="${safeUrl(a.img)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}<div class="ft-nt"><b>${esc(a.t)}</b><span>${esc(a.src)}${isNaN(a.p) ? '' : ' · ' + esc(ago(a.p))}</span></div></a>`).join('')
       : `<p class="ft-note">${okN === false ? 'Impossible de charger les actus pour le moment.' : 'Pas d’actu pour ce choix.'}</p>`;
     const top = body.scrollTop; body.innerHTML = h; body.scrollTop = top;
   }
