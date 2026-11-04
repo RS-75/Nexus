@@ -1682,17 +1682,29 @@ function tttBoard(R, canPlay) {
   ];
   const API = 'https://site.api.espn.com/apis/site/v2/sports/soccer/';
   const LS = 'foot.picks';
-  let matches = [], news = [], picks = [], lf = 'all', timer = null, local = false, okM = null, okN = null, first = true;
+  let dayDate = new Date(), matches = [], news = [], picks = [], lf = 'all', timer = null, local = false, okM = null, okN = null, first = true;
 
   const pad = n => String(n).padStart(2, '0');
   const ymd = d => d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate());
   const day = n => { const d = new Date(); d.setDate(d.getDate() + n); return d; };
   const lsGet = () => { try { return JSON.parse(localStorage.getItem(LS)) || {}; } catch (e) { return {}; } };
   const lsSet = o => { try { localStorage.setItem(LS, JSON.stringify(o)); } catch (e) {} };
+  // Essaie d'abord en direct, puis via le relais (le même que Tamil TV) si le navigateur bloque la requête
+  const RELAY = 'https://tamil-tv-proxy.aj-akswin.workers.dev/?u=';
+  let lastErr = '';
   async function getJSON(u) {
-    const r = await Promise.race([fetch(u), new Promise((_, j) => setTimeout(() => j(new Error('timeout')), 9000))]);
-    if (!r.ok) throw new Error(r.status);
-    return r.json();
+    for (const t of [u, RELAY + encodeURIComponent(u)]) {
+      try {
+        const r = await Promise.race([fetch(t), new Promise((_, j) => setTimeout(() => j(new Error('délai dépassé')), 9000))]);
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return await r.json();
+      } catch (e) { lastErr = String((e && e.message) || e); }
+    }
+    throw new Error(lastErr);
+  }
+  async function board(k, rng) {
+    try { return await getJSON(API + k + '/scoreboard?dates=' + rng); }
+    catch (e) { return await getJSON(API + k + '/scoreboard'); }
   }
 
   // --- Données ---
@@ -1707,12 +1719,21 @@ function tttBoard(R, canPlay) {
     return { id: l.k + ':' + e.id, lg: l, date: new Date(e.date), st: t.state || 'pre', det: t.shortDetail || '', h: T(h), a: T(a) };
   }
   async function loadMatches() {
-    const rng = ymd(day(-1)) + '-' + ymd(day(1));
-    const res = await Promise.all(LEAGUES.map(l => getJSON(API + l.k + '/scoreboard?dates=' + rng + '&limit=200')
+    const rng = ymd(day(-1)) + '-' + ymd(day(5));
+    const res = await Promise.all(LEAGUES.map(l => board(l.k, rng)
       .then(j => (j.events || []).map(e => parse(e, l))).catch(() => null)));
     okM = res.some(Boolean);
-    const td = new Date().toDateString();
-    if (okM || !matches.length) matches = [].concat(...res.map(r => r || [])).filter(m => m.date.toDateString() === td);
+    if (okM || !matches.length) {
+      // Matchs d'aujourd'hui (du matin jusqu'à ce soir) + ceux encore en direct ; sinon, le prochain jour de matchs
+      const all = [].concat(...res.map(r => r || [])), now = new Date(), td = now.toDateString();
+      let sel = all.filter(m => m.date.toDateString() === td || m.st === 'in');
+      dayDate = now;
+      if (!sel.length) {
+        const fut = all.filter(m => m.date > now).sort((a, b) => a.date - b.date);
+        if (fut.length) { const d = fut[0].date.toDateString(); sel = fut.filter(m => m.date.toDateString() === d); dayDate = fut[0].date; }
+      }
+      matches = sel;
+    }
   }
 const FEEDS = [
     { n: 'L’Équipe', u: 'https://dwh.lequipe.fr/api/edito/rss?path=/Football/' },
@@ -1811,7 +1832,7 @@ const FEEDS = [
     if (first && !matches.length) { body.innerHTML = '<p class="ft-note">Chargement des scores…</p>'; return; }
     let h = '';
     if (local) h += '<div class="ft-warn">Les pronos ne sont pas encore partagés avec le groupe : crée la table « foot_picks » dans Supabase (voir le guide). En attendant, tes choix restent sur cet appareil.</div>';
-    h += '<h3 class="ft-h3">Matchs du jour</h3><p class="ft-note" style="margin-top:-6px">' + esc(new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })) + '</p>';
+    h += '<h3 class="ft-h3">' + (dayDate.toDateString() === new Date().toDateString() ? 'Matchs du jour' : 'Prochains matchs') + '</h3><p class="ft-note" style="margin-top:-6px">' + esc(dayDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })) + '</p>';
     let any = false;
     L.forEach(l => {
       const rank = m => m.st === 'in' ? 0 : m.st === 'pre' ? 1 : 2;
@@ -1819,7 +1840,7 @@ const FEEDS = [
       if (!ms.length) return; any = true;
       h += `<div class="ft-lg" style="--c:${l.c}"><i></i>${esc(l.n)}</div>` + ms.map(card).join('');
     });
-    if (!any) h += `<p class="ft-note">${okM === false ? 'Impossible de charger les scores pour le moment. Réessaie avec le bouton d’actualisation.' : 'Pas de match aujourd’hui pour ce choix.'}</p>`;
+    if (!any) h += `<p class="ft-note">${okM === false ? 'Impossible de charger les scores pour le moment (' + esc(lastErr || 'erreur réseau') + '). Réessaie avec le bouton d’actualisation.' : 'Pas de match aujourd’hui pour ce choix.'}</p>`;
     h += leaderboard();
     const ns = news.filter(a => lf === 'all' || KW[lf].test(a.t + ' ' + a.d)).slice(0, 24);
     h += '<h3 class="ft-h3" style="margin-top:26px">Actus foot</h3>';
