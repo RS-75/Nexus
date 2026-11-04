@@ -1277,7 +1277,13 @@ let replyTo = null, msgCache = {}, reacts = {}, unread = {};
 const seen = JSON.parse(localStorage.getItem('seen') || '{}');
 const base = +localStorage.getItem('seenBase') || (localStorage.setItem('seenBase', Date.now()), Date.now());
 const EMO = ['👍', '❤️', '😂', '🔥', '😮', '😢', '🎉', '👀'];
-const emo = e => `<img class="em" alt="${e}" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/${[...e].map(c => c.codePointAt(0).toString(16)).filter(c => c !== 'fe0f').join('-')}.svg" onerror="this.replaceWith(document.createTextNode(this.alt))">`;
+const EMO_BASE = 'https://cdn.jsdelivr.net/npm/emoji-datasource-apple@15.0.1/img/apple/64/';
+const emo = e => {
+  const cp = [...e].map(c => c.codePointAt(0).toString(16)), a = cp.join('-'), b = cp.filter(c => c !== 'fe0f').join('-');
+  const alts = [...new Set([b, b + '-fe0f'].filter(x => x !== a))].map(x => EMO_BASE + x + '.png').join(' ');
+  return `<img class="em" alt="${e}" src="${EMO_BASE}${a}.png" data-alts="${alts}" onerror="emoErr(this)">`;
+};
+function emoErr(i) { const l = (i.dataset.alts || '').split(' ').filter(Boolean); if (l.length) { i.dataset.alts = l.slice(1).join(' '); i.src = l[0]; } else i.replaceWith(document.createTextNode(i.alt)); }
 const badge = c => unread[c] > 0 ? `<span class="badge">${unread[c]}</span>` : '';
 const preview = m => m.content ? m.content.replace(/\|\|.+?\|\|/g, '[spoil]') : (m.image_url ? 'Photo' : 'Message vocal');
 function markSeen(c) { seen[c] = Date.now(); unread[c] = 0; localStorage.setItem('seen', JSON.stringify(seen)); }
