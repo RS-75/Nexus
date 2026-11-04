@@ -295,6 +295,28 @@ body{background:radial-gradient(80% 40% at 50% 100%,rgba(29,78,216,.38),transpar
 .ft-nt{min-width:0;display:flex;flex-direction:column;gap:5px}
 .ft-nt b{font-size:15px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .ft-nt span{font-size:12px;color:var(--dim);display:flex;align-items:center;gap:7px}
+#fTabs{flex:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin:2px 16px 10px;padding:4px;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.35)}
+#fTabs button{height:38px;border:0;border-radius:10px;background:none;color:var(--dim);font-size:14.5px;font-weight:600;cursor:pointer;transition:.2s}
+#fTabs button[aria-pressed=true]{background:linear-gradient(135deg,rgba(37,99,235,.9),rgba(56,189,248,.7));color:#fff;box-shadow:0 0 16px rgba(56,189,248,.35)}
+#fDays{flex:none;display:flex;gap:8px;overflow-x:auto;padding:0 16px 10px;scrollbar-width:none}
+#fDays::-webkit-scrollbar{display:none}
+.ft-day{flex:none;min-width:66px;padding:8px 10px;border-radius:14px;background:rgba(59,130,246,.14);border:1px solid var(--line);color:var(--txt);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px}
+.ft-day small{font-size:11.5px;color:var(--dim);text-transform:capitalize}
+.ft-day b{font-size:18px;line-height:1.2}
+.ft-day i{font-style:normal;font-size:10.5px;opacity:.7;white-space:nowrap}
+.ft-day[aria-pressed=true]{background:#f1f6ff;color:#04070f;border-color:#f1f6ff}
+.ft-day[aria-pressed=true] small{color:#334}
+.ft-tb{border-radius:20px;padding:6px 6px;overflow:hidden}
+.ft-tr{display:grid;grid-template-columns:22px minmax(0,1fr) 22px 22px 22px 22px 32px 30px;align-items:center;gap:3px;padding:8px 6px;border-left:3px solid transparent;font-size:13px;font-variant-numeric:tabular-nums}
+.ft-tr.hd{font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--dim)}
+.ft-tr+.ft-tr{border-top:1px solid rgba(130,175,255,.08)}
+.ft-tr .t{display:flex;align-items:center;gap:7px;min-width:0}
+.ft-tr .t img{width:20px;height:20px;object-fit:contain;flex:none}
+.ft-tr .t span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.ft-tr .c{text-align:center}
+.ft-tr .p{text-align:right;font-weight:800}
+.ft-lgd{display:flex;flex-wrap:wrap;gap:6px 14px;margin:12px 4px;font-size:12px;color:var(--dim)}
+.ft-lgd span{display:flex;align-items:center;gap:6px}
 /* ===== Tamil TV ===== */
 #ttv{display:none;position:absolute;inset:0;z-index:11;flex-direction:column;background:rgba(4,7,15,.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
 #ttv.on{display:flex}
@@ -443,6 +465,8 @@ body{background:radial-gradient(80% 40% at 50% 100%,rgba(29,78,216,.38),transpar
   <div id="toast"></div>
   <div id="foot">
   <div id="fHead"><button id="fBack" data-i="back" aria-label="Retour"></button><span>Foot</span><button id="fRef" aria-label="Actualiser">&#8635;</button></div>
+  <div id="fTabs"><button data-t="m" aria-pressed="true">Matchs</button><button data-t="c" aria-pressed="false">Classements</button><button data-t="a" aria-pressed="false">Actus</button></div>
+  <div id="fDays"></div>
   <div id="fChips"></div>
   <div id="fBody"></div>
 </div>
@@ -1670,28 +1694,49 @@ function tttBoard(R, canPlay) {
     return `<div class="tc${ok ? ' ok' : ''}${win.has(i) ? ' w' : ''}"${ok ? ` data-g="cell" data-i="${i}"` : ''}>${v == null ? '' : mark(v, fresh && i === s.last)}</div>`;
   }).join('') + '</div>';
 }
-/* ===== Foot : scores, pronos, actus ===== */
+/* ===== Foot : scores, pronos, classements, actus ===== */
 (function () {
   const g = id => document.getElementById(id);
   const root = g('foot'), body = g('fBody');
-  // Ordre d'affichage : Ligue des champions, Liga, Ligue 1 (ajoute une ligne ici pour une autre ligue)
+  // Ordre d'affichage : Ligue des champions, Liga, Ligue 1, puis les autres (ajoute une ligne pour une autre compétition)
   const LEAGUES = [
-    { k: 'uefa.champions', n: 'Ligue des champions', s: 'LdC', c: '#38bdf8' },
-    { k: 'esp.1', n: 'Liga', s: 'Liga', c: '#fb923c' },
-    { k: 'fra.1', n: 'Ligue 1', s: 'Ligue 1', c: '#a78bfa' }
+    { k: 'uefa.champions', n: 'Ligue des champions', s: 'LdC', c: '#38bdf8', kw: /ligue des champions|\bc1\b|champions league/i },
+    { k: 'esp.1', n: 'Liga', s: 'Liga', c: '#fb923c', kw: /liga|real madrid|bar[cç]a|barcelone|atl[eé]tico|espagn|s[eé]ville|villarreal/i },
+    { k: 'fra.1', n: 'Ligue 1', s: 'Ligue 1', c: '#a78bfa', kw: /ligue 1|\bpsg\b|paris|marseille|\bom\b|lyon|monaco|lille|\blens\b|rennes|\bnice\b|nantes|strasbourg/i },
+    { k: 'eng.1', n: 'Premier League', s: 'Premier League', c: '#f472b6', kw: /premier league|manchester|liverpool|arsenal|chelsea|tottenham|newcastle|angleterre|anglais/i },
+    { k: 'ita.1', n: 'Serie A', s: 'Serie A', c: '#34d399', kw: /serie a|juventus|\binter\b|milan|naples|napoli|\broma\b|italie|italien/i },
+    { k: 'ger.1', n: 'Bundesliga', s: 'Bundesliga', c: '#f87171', kw: /bundesliga|bayern|dortmund|leverkusen|leipzig|allemagne|allemand/i },
+    { k: 'uefa.europa', n: 'Ligue Europa', s: 'Europa', c: '#fbbf24', kw: /ligue europa|europa league|\bc3\b/i },
+    { k: 'uefa.europa.conf', n: 'Ligue Conférence', s: 'Conférence', c: '#4ade80', kw: /conf[eé]rence league|ligue conf[eé]rence/i },
+    { k: 'por.1', n: 'Liga Portugal', s: 'Portugal', c: '#2dd4bf', kw: /liga portugal|benfica|sporting|porto|portugal/i },
+    { k: 'ned.1', n: 'Eredivisie', s: 'Pays-Bas', c: '#fb7185', kw: /eredivisie|ajax|\bpsv\b|feyenoord|pays-bas|n[eé]erlandais/i }
+  ];
+  const FEEDS = [
+    { n: 'L’Équipe', u: 'https://dwh.lequipe.fr/api/edito/rss?path=/Football/' },
+    { n: 'RMC Sport', u: 'https://rmcsport.bfmtv.com/rss/football/' },
+    { n: 'Le Monde', u: 'https://www.lemonde.fr/football/rss_full.xml' },
+    { n: 'France Info', u: 'https://www.francetvinfo.fr/sports/foot.rss' }
   ];
   const API = 'https://site.api.espn.com/apis/site/v2/sports/soccer/';
+  const API2 = 'https://site.api.espn.com/apis/v2/sports/soccer/';
+  const RSS = 'https://api.rss2json.com/v1/api.json?rss_url=';
+  const RELAY = 'https://tamil-tv-proxy.aj-akswin.workers.dev/?u=';
   const LS = 'foot.picks';
-  let dayDate = new Date(), matches = [], news = [], picks = [], lf = 'all', timer = null, local = false, okM = null, okN = null, first = true;
+  const DAYS = [-2, -1, 0, 1, 2, 3, 4];
+  let all = [], news = [], picks = [], stand = {}, lf = 'all', tab = 'm', sel = 0, userDay = false, timer = null;
+  let local = false, okM = null, okN = null, first = true, lastErr = '';
 
   const pad = n => String(n).padStart(2, '0');
   const ymd = d => d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate());
   const day = n => { const d = new Date(); d.setDate(d.getDate() + n); return d; };
+  const sod = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const off = d => Math.round((sod(d) - sod(new Date())) / 864e5);
   const lsGet = () => { try { return JSON.parse(localStorage.getItem(LS)) || {}; } catch (e) { return {}; } };
   const lsSet = o => { try { localStorage.setItem(LS, JSON.stringify(o)); } catch (e) {} };
+  const strip = h => String(h || '').replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+  const hex = c => /^#?[0-9a-f]{3,8}$/i.test(c || '') ? (c[0] === '#' ? c : '#' + c) : '';
+
   // Essaie d'abord en direct, puis via le relais (le même que Tamil TV) si le navigateur bloque la requête
-  const RELAY = 'https://tamil-tv-proxy.aj-akswin.workers.dev/?u=';
-  let lastErr = '';
   async function getJSON(u) {
     for (const t of [u, RELAY + encodeURIComponent(u)]) {
       try {
@@ -1719,35 +1764,25 @@ function tttBoard(R, canPlay) {
     return { id: l.k + ':' + e.id, lg: l, date: new Date(e.date), st: t.state || 'pre', det: t.shortDetail || '', h: T(h), a: T(a) };
   }
   async function loadMatches() {
-    const rng = ymd(day(-1)) + '-' + ymd(day(5));
-    const res = await Promise.all(LEAGUES.map(l => board(l.k, rng)
-      .then(j => (j.events || []).map(e => parse(e, l))).catch(() => null)));
+    const rng = ymd(day(-3)) + '-' + ymd(day(5));
+    const res = await Promise.all(LEAGUES.map(l => board(l.k, rng).then(j => (j.events || []).map(e => parse(e, l))).catch(() => null)));
     okM = res.some(Boolean);
-    if (okM || !matches.length) {
-      // Matchs d'aujourd'hui (du matin jusqu'à ce soir) + ceux encore en direct ; sinon, le prochain jour de matchs
-      const all = [].concat(...res.map(r => r || [])), now = new Date(), td = now.toDateString();
-      let sel = all.filter(m => m.date.toDateString() === td || m.st === 'in');
-      dayDate = now;
-      if (!sel.length) {
-        const fut = all.filter(m => m.date > now).sort((a, b) => a.date - b.date);
-        if (fut.length) { const d = fut[0].date.toDateString(); sel = fut.filter(m => m.date.toDateString() === d); dayDate = fut[0].date; }
-      }
-      matches = sel;
+    if (okM || !all.length) {
+      const seen = new Set();
+      all = [].concat(...res.map(r => r || [])).filter(m => !seen.has(m.id) && seen.add(m.id));
     }
+    if (!userDay) autoDay();
   }
-const FEEDS = [
-    { n: 'L’Équipe', u: 'https://dwh.lequipe.fr/api/edito/rss?path=/Football/' },
-    { n: 'RMC Sport', u: 'https://rmcsport.bfmtv.com/rss/football/' },
-    { n: 'Le Monde', u: 'https://www.lemonde.fr/football/rss_full.xml' },
-    { n: 'France Info', u: 'https://www.francetvinfo.fr/sports/foot.rss' }
-  ];
-  const KW = {
-    'uefa.champions': /ligue des champions|\bc1\b|champions league/i,
-    'esp.1': /liga|real madrid|bar[cç]a|barcelone|atl[eé]tico|espagn|s[eé]ville|villarreal/i,
-    'fra.1': /ligue 1|\bpsg\b|paris|marseille|\bom\b|lyon|monaco|lille|\blens\b|rennes|nice|nantes|strasbourg/i
-  };
-  const strip = h => String(h || '').replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
-  const RSS = 'https://api.rss2json.com/v1/api.json?rss_url=';
+  // Si rien n'est prévu aujourd'hui, on se place sur le prochain jour de matchs (sinon le dernier)
+  function autoDay() {
+    const n = o => all.filter(m => off(m.date) === o).length;
+    if (n(0)) { sel = 0; return; }
+    for (let o = 1; o <= 5; o++) if (n(o)) { sel = o; return; }
+    for (let o = -1; o >= -3; o--) if (n(o)) { sel = o; return; }
+    sel = 0;
+  }
+  const dayMs = () => all.filter(m => off(m.date) === sel || (sel === 0 && m.st === 'in'));
+
   async function loadNews() {
     const res = await Promise.all(FEEDS.map(f => getJSON(RSS + encodeURIComponent(f.u)).then(j => (j.items || []).map(a => ({
       src: f.n, t: strip(a.title), d: strip(a.description), u: a.link,
@@ -1756,18 +1791,34 @@ const FEEDS = [
     }))).catch(() => null)));
     okN = res.some(Boolean);
     const seen = new Set();
-    news = [].concat(...res.map(r => r || [])).filter(a => a.t && a.u && !seen.has(a.u) && seen.add(a.u)).sort((x, y) => (isNaN(y.p) ? 0 : y.p) - (isNaN(x.p) ? 0 : x.p)).slice(0, 40);
+    news = [].concat(...res.map(r => r || [])).filter(a => a.t && a.u && !seen.has(a.u) && seen.add(a.u))
+      .sort((x, y) => (isNaN(y.p) ? 0 : y.p) - (isNaN(x.p) ? 0 : x.p)).slice(0, 60);
   }
   async function loadPicks() {
-    const ids = matches.map(m => m.id);
+    const ids = all.map(m => m.id);
     if (!ids.length) { picks = []; return; }
-    const { data, error } = await db.from('foot_picks').select('*').in('match_id', ids);
-    if (error) { local = true; picks = Object.entries(lsGet()).map(([match_id, pick]) => ({ match_id, pick, user_id: me.id })); }
-    else { local = false; picks = data || []; }
+    const chunks = []; for (let i = 0; i < ids.length; i += 60) chunks.push(ids.slice(i, i + 60));
+    const rs = await Promise.all(chunks.map(c => db.from('foot_picks').select('*').in('match_id', c)));
+    if (rs.some(r => r.error)) { local = true; picks = Object.entries(lsGet()).map(([match_id, pick]) => ({ match_id, pick, user_id: me.id })); }
+    else { local = false; picks = [].concat(...rs.map(r => r.data || [])); }
+  }
+  function parseStand(j) {
+    const ch = (j.children && j.children[0]) || j, en = (ch.standings && ch.standings.entries) || [];
+    return en.map((e, i) => {
+      const st = {}; (e.stats || []).forEach(x => { st[x.name] = x.value; });
+      const T = e.team || {};
+      return { r: st.rank || i + 1, n: T.shortDisplayName || T.displayName || '?', logo: (T.logos && T.logos[0] && T.logos[0].href) || '',
+        j: st.gamesPlayed, v: st.wins, nl: st.ties != null ? st.ties : st.draws, d: st.losses, gd: st.pointDifferential, pts: st.points, note: e.note || null };
+    }).sort((a, b) => a.r - b.r);
+  }
+  async function loadStand(k) {
+    try { const rows = parseStand(await getJSON(API2 + k + '/standings')); stand[k] = rows.length ? rows : null; }
+    catch (e) { stand[k] = null; }
+    stand['_t' + k] = Date.now();
   }
   async function refreshScores() { await loadMatches(); await loadPicks(); render(); }
   async function refresh() {
-    const b = g('fRef'); b.classList.add('spin');
+    const b = g('fRef'); b.classList.add('spin'); stand = {};
     try { await Promise.all([loadMatches(), loadNews()]); await loadPicks(); } catch (e) {}
     first = false; b.classList.remove('spin'); render();
   }
@@ -1775,7 +1826,7 @@ const FEEDS = [
   // --- Pronos ---
   const res = m => m.st === 'post' && m.h.s != null && m.a.s != null ? (m.h.s > m.a.s ? '1' : m.h.s < m.a.s ? '2' : 'N') : null;
   async function pick(id, p) {
-    const m = matches.find(x => x.id === id); if (!m || m.st !== 'pre') return;
+    const m = all.find(x => x.id === id); if (!m || m.st !== 'pre') return;
     const cur = picks.find(x => x.match_id === id && x.user_id === me.id);
     if (cur && cur.pick === p) return;
     if (cur) cur.pick = p; else picks.push({ match_id: id, user_id: me.id, pick: p });
@@ -1820,43 +1871,71 @@ const FEEDS = [
   }
   function leaderboard() {
     const sc = {};
-    matches.forEach(m => { const r = res(m); if (!r) return; picks.filter(p => p.match_id === m.id).forEach(p => { const o = sc[p.user_id] = sc[p.user_id] || { ok: 0, n: 0 }; o.n++; if (p.pick === r) o.ok++; }); });
+    all.forEach(m => { const r = res(m); if (!r) return; picks.filter(p => p.match_id === m.id).forEach(p => { const o = sc[p.user_id] = sc[p.user_id] || { ok: 0, n: 0 }; o.n++; if (p.pick === r) o.ok++; }); });
     const rows = Object.entries(sc).sort((a, b) => b[1].ok - a[1].ok || a[1].n - b[1].n);
     if (!rows.length) return '';
-    return `<h3 class="ft-h3" style="margin-top:22px">Classement des pronos du jour</h3><div class="glass ft-lb">${rows.map(([id, o], i) => `<div class="r"><span style="width:20px;color:var(--dim)">${i + 1}</span>${avatar(names[id] || '?', 30, id)}<span>${esc(id === me.id ? 'Moi' : (names[id] || '?'))}</span><b>${o.ok}/${o.n}</b></div>`).join('')}</div><p class="ft-note">Pronostics justes sur les matchs terminés aujourd’hui.</p>`;
+    return `<h3 class="ft-h3" style="margin-top:22px">Classement des pronos</h3><div class="glass ft-lb">${rows.map(([id, o], i) => `<div class="r"><span style="width:20px;color:var(--dim)">${i + 1}</span>${avatar(names[id] || '?', 30, id)}<span>${esc(id === me.id ? 'Moi' : (names[id] || '?'))}</span><b>${o.ok}/${o.n}</b></div>`).join('')}</div><p class="ft-note">Pronostics justes sur les matchs terminés des derniers jours.</p>`;
   }
-  function render() {
-    const L = lf === 'all' ? LEAGUES : LEAGUES.filter(l => l.k === lf);
-    g('fChips').innerHTML = [['all', 'Tous', '']].concat(LEAGUES.map(l => [l.k, l.s, l.c]))
-      .map(([k, t, c]) => `<button class="ft-chip" data-k="${k}" aria-pressed="${k === lf}">${c ? `<i class="ft-dot" style="--c:${c}"></i>` : ''}${esc(t)}</button>`).join('');
-    if (first && !matches.length) { body.innerHTML = '<p class="ft-note">Chargement des scores…</p>'; return; }
+  const dTitle = o => o === 0 ? 'Matchs du jour' : o === -1 ? 'Matchs d’hier' : o === 1 ? 'Matchs de demain' : 'Matchs';
+  function dayStrip() {
+    return DAYS.map(o => {
+      const d = day(o), n = all.filter(m => off(m.date) === o).length;
+      const top = o === 0 ? 'Auj.' : o === -1 ? 'Hier' : o === 1 ? 'Demain' : d.toLocaleDateString('fr-FR', { weekday: 'short' }).replace('.', '');
+      return `<button class="ft-day" data-o="${o}" aria-pressed="${o === sel}"><small>${esc(top)}</small><b>${d.getDate()}</b><i>${n ? n + ' match' + (n > 1 ? 's' : '') : '–'}</i></button>`;
+    }).join('');
+  }
+  function viewMatches() {
+    const L = lf === 'all' ? LEAGUES : LEAGUES.filter(l => l.k === lf), ms = dayMs();
     let h = '';
-    if (local) h += '<div class="ft-warn">Les pronos ne sont pas encore partagés avec le groupe : crée la table « foot_picks » dans Supabase (voir le guide). En attendant, tes choix restent sur cet appareil.</div>';
-    h += '<h3 class="ft-h3">' + (dayDate.toDateString() === new Date().toDateString() ? 'Matchs du jour' : 'Prochains matchs') + '</h3><p class="ft-note" style="margin-top:-6px">' + esc(dayDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })) + '</p>';
+    if (local) h += '<div class="ft-warn">Les pronos ne sont pas encore partagés avec le groupe : crée la table « foot_picks » dans Supabase. En attendant, tes choix restent sur cet appareil.</div>';
+    h += `<h3 class="ft-h3">${dTitle(sel)}</h3><p class="ft-note" style="margin-top:-6px">${esc(day(sel).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }))}</p>`;
     let any = false;
     L.forEach(l => {
-      const rank = m => m.st === 'in' ? 0 : m.st === 'pre' ? 1 : 2;
-      const ms = matches.filter(m => m.lg === l).sort((a, b) => rank(a) - rank(b) || (rank(a) === 2 ? b.date - a.date : a.date - b.date));
-      if (!ms.length) return; any = true;
-      h += `<div class="ft-lg" style="--c:${l.c}"><i></i>${esc(l.n)}</div>` + ms.map(card).join('');
+      const x = ms.filter(m => m.lg === l).sort((a, b) => (a.st === 'in' ? 0 : 1) - (b.st === 'in' ? 0 : 1) || a.date - b.date);
+      if (!x.length) return; any = true;
+      h += `<div class="ft-lg" style="--c:${l.c}"><i></i>${esc(l.n)}</div>` + x.map(card).join('');
     });
-    if (!any) h += `<p class="ft-note">${okM === false ? 'Impossible de charger les scores pour le moment (' + esc(lastErr || 'erreur réseau') + '). Réessaie avec le bouton d’actualisation.' : 'Pas de match aujourd’hui pour ce choix.'}</p>`;
-    h += leaderboard();
-    const ns = news.filter(a => lf === 'all' || KW[lf].test(a.t + ' ' + a.d)).slice(0, 24);
-    h += '<h3 class="ft-h3" style="margin-top:26px">Actus foot</h3>';
-    h += ns.length ? ns.map(a => `<a class="glass ft-n" href="${safeUrl(a.u)}" target="_blank" rel="noopener">${safeUrl(a.img) ? `<img src="${safeUrl(a.img)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}<div class="ft-nt"><b>${esc(a.t)}</b><span>${esc(a.src)}${isNaN(a.p) ? '' : ' · ' + esc(ago(a.p))}</span></div></a>`).join('')
-      : `<p class="ft-note">${okN === false ? 'Impossible de charger les actus pour le moment.' : 'Pas d’actu pour ce choix.'}</p>`;
-    const top = body.scrollTop; body.innerHTML = h; body.scrollTop = top;
+    if (!any) h += `<p class="ft-note">${okM === false ? 'Impossible de charger les scores pour le moment (' + esc(lastErr || 'erreur réseau') + '). Réessaie avec le bouton d’actualisation.' : 'Aucun match ce jour-là pour ce choix.'}</p>`;
+    return h + leaderboard();
+  }
+  function viewStand() {
+    const k = lf === 'all' ? LEAGUES[0].k : lf, l = LEAGUES.find(x => x.k === k);
+    if (!(k in stand)) { loadStand(k).then(render); return '<p class="ft-note">Chargement du classement…</p>'; }
+    const rows = stand[k];
+    if (!rows) { delete stand[k]; return '<p class="ft-note">Classement indisponible pour le moment. Réessaie avec le bouton d’actualisation.</p>'; }
+    const f = v => v == null ? '–' : v, gd = v => v == null ? '–' : v > 0 ? '+' + v : v;
+    const notes = {}; rows.forEach(r => { if (r.note && r.note.description && hex(r.note.color)) notes[r.note.description] = hex(r.note.color); });
+    return `<h3 class="ft-h3">Classement · ${esc(l.n)}</h3><div class="glass ft-tb"><div class="ft-tr hd"><span class="c">#</span><span>Club</span><span class="c">J</span><span class="c">V</span><span class="c">N</span><span class="c">D</span><span class="c">+/-</span><span class="c">Pts</span></div>`
+      + rows.map(r => `<div class="ft-tr" style="border-left-color:${r.note && hex(r.note.color) || 'transparent'}"><span class="c">${f(r.r)}</span><span class="t">${r.logo ? `<img src="${esc(r.logo)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}<span>${esc(r.n)}</span></span><span class="c">${f(r.j)}</span><span class="c">${f(r.v)}</span><span class="c">${f(r.nl)}</span><span class="c">${f(r.d)}</span><span class="c">${gd(r.gd)}</span><span class="p">${f(r.pts)}</span></div>`).join('')
+      + '</div>' + (Object.keys(notes).length ? `<div class="ft-lgd">${Object.entries(notes).map(([d, c]) => `<span><i class="ft-dot" style="--c:${c}"></i>${esc(d)}</span>`).join('')}</div>` : '');
+  }
+  function viewNews() {
+    const ns = news.filter(a => lf === 'all' || LEAGUES.find(l => l.k === lf).kw.test(a.t + ' ' + a.d)).slice(0, 30);
+    return '<h3 class="ft-h3">Actus foot</h3>' + (ns.length ? ns.map(a => `<a class="glass ft-n" href="${safeUrl(a.u)}" target="_blank" rel="noopener">${safeUrl(a.img) ? `<img src="${safeUrl(a.img)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}<div class="ft-nt"><b>${esc(a.t)}</b><span>${esc(a.src)}${isNaN(a.p) ? '' : ' · ' + esc(ago(a.p))}</span></div></a>`).join('')
+      : `<p class="ft-note">${okN === false ? 'Impossible de charger les actus pour le moment.' : 'Pas d’actu pour ce choix.'}</p>`);
+  }
+  function render() {
+    root.querySelectorAll('#fTabs button').forEach(b => b.setAttribute('aria-pressed', b.dataset.t === tab));
+    const dd = g('fDays'); dd.style.display = tab === 'm' ? 'flex' : 'none'; if (tab === 'm') dd.innerHTML = dayStrip();
+    const chips = (tab === 'c' ? [] : [['all', 'Tous', '']]).concat(LEAGUES.map(l => [l.k, l.s, l.c]));
+    const cur = tab === 'c' && lf === 'all' ? LEAGUES[0].k : lf;
+    g('fChips').innerHTML = chips.map(([k, t, c]) => `<button class="ft-chip" data-k="${k}" aria-pressed="${k === cur}">${c ? `<i class="ft-dot" style="--c:${c}"></i>` : ''}${esc(t)}</button>`).join('');
+    if (first && !all.length && tab === 'm') { body.innerHTML = '<p class="ft-note">Chargement des scores…</p>'; return; }
+    const top = body.scrollTop;
+    body.innerHTML = tab === 'm' ? viewMatches() : tab === 'c' ? viewStand() : viewNews();
+    body.scrollTop = top;
   }
 
   // --- Événements ---
   body.addEventListener('click', e => { const b = e.target.closest('.ft-pk'); if (b && !b.disabled) pick(b.dataset.id, b.dataset.p); });
   g('fChips').addEventListener('click', e => { const b = e.target.closest('.ft-chip'); if (!b) return; lf = b.dataset.k; body.scrollTop = 0; render(); });
+  g('fDays').addEventListener('click', e => { const b = e.target.closest('.ft-day'); if (!b) return; sel = +b.dataset.o; userDay = true; body.scrollTop = 0; render(); });
+  g('fTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; tab = b.dataset.t; if (tab === 'c' && lf === 'all') lf = LEAGUES[0].k; body.scrollTop = 0; render(); });
   g('fRef').onclick = refresh;
   g('fBack').onclick = () => { root.classList.remove('on'); clearInterval(timer); };
   window.openFoot = function () {
-    root.classList.add('on'); render(); refresh();
-    clearInterval(timer); timer = setInterval(() => { if (!document.hidden && root.classList.contains('on')) refreshScores(); }, 45000);
+    root.classList.add('on'); userDay = false; render(); refresh();
+    clearInterval(timer); timer = setInterval(() => { if (!document.hidden && root.classList.contains('on') && tab === 'm') refreshScores(); }, 45000);
   };
 })();
 
