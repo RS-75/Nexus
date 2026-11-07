@@ -244,6 +244,55 @@ body{background:radial-gradient(80% 40% at 50% 100%,rgba(29,78,216,.38),transpar
 .so-vote button{height:48px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid var(--line);color:var(--txt);font-size:15px;font-weight:600;cursor:pointer}
 .so-vote button.on{background:linear-gradient(135deg,rgba(37,99,235,.9),rgba(56,189,248,.7));border-color:transparent}
 .so-del{margin-top:14px;width:100%;height:44px;border-radius:14px;background:none;border:1px solid rgba(248,113,113,.35);color:#fca5a5;font-size:14px;cursor:pointer}
+/* ===== Nouveautés : admin, swipe, annonce, éphémère, classement jeux ===== */
+#adminBox .set{grid-template-columns:minmax(0,1fr)}
+.adm-u{display:grid;grid-template-columns:40px minmax(0,1fr) auto;align-items:center;gap:12px;padding:10px 0;border-top:1px solid rgba(130,175,255,.12)}
+.adm-u .ico{margin:0}
+.adm-i{min-width:0}
+.adm-i b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:15px}
+.adm-i b small{font-size:11px;font-weight:600;margin-left:4px}
+.adm-i span{display:block;color:var(--dim);font-size:12px;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.adm-del{width:auto!important;padding:8px 12px!important;font-size:13px;flex:none}
+#p-reglages{overflow-x:hidden}
+#msgs{overflow-x:hidden}
+.row{position:relative;touch-action:pan-y;transition:transform .22s cubic-bezier(.2,.8,.2,1)}
+.row.sw{transition:none}
+.swr{position:absolute;left:-46px;top:50%;margin-top:-16px;width:32px;height:32px;border-radius:50%;background:rgba(59,130,246,.35);display:grid;place-items:center;opacity:0;transform:scale(.6);pointer-events:none}
+.swr .i{width:18px;height:18px}
+.swr.go{background:#2563eb}
+.q{cursor:pointer}
+.row.hl .m{animation:hlm 1.3s}
+@keyframes hlm{0%,65%{box-shadow:0 0 0 3px rgba(125,196,255,.75)}100%{box-shadow:0 0 0 0 transparent}}
+.eph{display:inline-flex;align-items:center;gap:3px;opacity:.8;margin-left:7px}
+.eph .i{width:11px;height:11px}.eph em{font-style:normal}
+#ephBtn{background:rgba(59,130,246,.22);border:1px solid var(--line);cursor:pointer;color:var(--txt)}
+#ephBtn.on{background:linear-gradient(135deg,#f59e0b,#f97316);border:0;color:#fff}
+.pin{padding:14px 16px;margin-bottom:14px;border-radius:20px;border-color:rgba(251,191,36,.45);background:linear-gradient(135deg,rgba(251,191,36,.14),rgba(59,130,246,.1))}
+.pin .ph{display:flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#fcd34d;font-weight:700;margin-bottom:8px}
+.pin .ph .i{width:15px;height:15px}
+.pin p{font-size:15px;line-height:1.45;overflow-wrap:anywhere;white-space:pre-wrap}
+.pin .pm{margin-top:10px;font-size:12px;color:var(--dim);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pin .pa{margin-left:auto;display:flex;gap:8px}
+.pin .pa button{background:rgba(255,255,255,.08);border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:7px 12px;font-size:12.5px;cursor:pointer}
+.pin .pa .btn{border:0;background:linear-gradient(135deg,#2563eb,#38bdf8)}
+.pin textarea{width:100%;min-height:90px;background:rgba(0,0,0,.35);border:1px solid var(--line);color:var(--txt);border-radius:12px;padding:12px;font:inherit;font-size:15px;resize:vertical;margin-bottom:10px}
+.pinAdd{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-bottom:14px;padding:11px;border-radius:14px;border:1px dashed rgba(251,191,36,.5);background:none;color:#fcd34d;font-size:14px;cursor:pointer}
+.pinAdd .i{width:16px;height:16px}
+.lbr{display:grid;grid-template-columns:26px 36px minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px 0}
+.lbr+.lbr{border-top:1px solid rgba(130,175,255,.1)}
+.lbn{text-align:center;color:var(--dim);font-weight:700}
+.lbn .em{width:22px;height:22px;vertical-align:middle}
+.lbi{min-width:0}
+.lbi b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lbi span{display:block;font-size:12px;color:var(--dim);line-height:1.35}
+.lbb{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap}.lbb .em{width:17px;height:17px}
+.lbr strong{font-size:20px}
+.bds{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.bd{display:flex;align-items:center;gap:10px;padding:10px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.04);opacity:.42;min-width:0}
+.bd.on{opacity:1;background:rgba(59,130,246,.18);border-color:rgba(124,196,255,.5)}
+.bd .em{width:26px;height:26px;flex:none}
+.bd div{min-width:0}
+.bd b{display:block;font-size:13px}.bd small{color:var(--dim);font-size:11.5px}
 /* ===== Foot ===== */
 #foot{display:none;position:absolute;inset:0;z-index:11;flex-direction:column;background:rgba(4,7,15,.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
 #foot.on{display:flex}
@@ -411,7 +460,7 @@ body{background:radial-gradient(80% 40% at 50% 100%,rgba(29,78,216,.38),transpar
 </div>
 
 <div id="app">
-  <section class="panel on" id="p-salons"><h2 id="hello">Salons</h2><p class="sub">Choisis où discuter</p><div class="glass set" id="qcard" style="margin-bottom:16px"><label>Question du jour</label><b id="qText" style="font-size:16px;line-height:1.35"></b><button class="btn" id="qGo">Poser la question dans Général</button></div>
+  <section class="panel on" id="p-salons"><h2 id="hello">Salons</h2><p class="sub">Choisis où discuter</p><div id="pinBox"></div><div class="glass set" id="qcard" style="margin-bottom:16px"><label>Question du jour</label><b id="qText" style="font-size:16px;line-height:1.35"></b><button class="btn" id="qGo">Poser la question dans Général</button></div>
     <div id="channels"></div></section>
   <section class="panel" id="p-prive"><h2>Privé</h2><p class="sub">Discussions entre vous deux</p><div id="dms"></div></section>
   <section class="panel" id="p-cine"><h2>Ciné</h2><p class="sub">Regardez une vidéo YouTube ensemble, en direct</p>
@@ -460,7 +509,7 @@ body{background:radial-gradient(80% 40% at 50% 100%,rgba(29,78,216,.38),transpar
     <div id="bar">
       <button class="round" id="imgBtn" title="Photo" data-i="image"></button><input type="file" id="imgIn" accept="image/*" hidden>
       <button class="round" id="mic" title="Message vocal" data-i="mic"></button>
-      <input id="text" placeholder="Message… (/dé /pile /tirage)" autocomplete="off">
+      <button class="round" id="ephBtn" title="Message éphémère (24 h)" data-i="timer"></button><input id="text" placeholder="Message… (/dé /pile /tirage)" autocomplete="off">
       <button class="btn round" id="send" data-i="send"></button>
     </div>
   </div>
@@ -569,6 +618,8 @@ const IC = {
  video:'<rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/>',
  screen:'<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>',
  image:'<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="M21 16l-5-5-8 8"/>',
+ timer:'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/>',
+ pin:'<path d="M9 3h6l-1 6 3 3v2H7v-2l3-3zM12 14v7"/>',
  reply:'<path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 016 6v3"/>',
  trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
  play:'<circle cx="12" cy="12" r="9"/><path d="M10 8.5l6 3.5-6 3.5z"/>',
@@ -696,10 +747,11 @@ async function renderAdmin() {
     + (errTxt ? `<p style="color:#fde68a;font-size:12.5px;line-height:1.45">${esc(errTxt)}</p>` : '')
     + rows.map(u => {
       const self = u.id === me.id, nm = u.username || (u.email || '?').split('@')[0];
-      return `<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-top:1px solid rgba(130,175,255,.12)">${avatar(nm, 40, u.id)}
-        <div style="min-width:0;flex:1"><b style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(nm)}${u.role === 'admin' ? ' <small style="color:#7cc4ff">admin</small>' : ''}${self ? ' <small style="color:var(--dim)">(toi)</small>' : ''}</b>
-        <span style="display:block;color:var(--dim);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(u.email || '')}${u.email ? ' · ' : ''}inscrit le ${d(u.created_at)}${u.last_sign_in_at ? ' · vu le ' + d(u.last_sign_in_at) : ''}</span></div>
-        ${self || errTxt ? '' : `<button class="danger admDel" data-id="${esc(u.id)}" data-n="${esc(nm)}" style="width:auto;padding:9px 12px;font-size:13px">Supprimer</button>`}</div>`;
+      return `<div class="adm-u">${avatar(nm, 40, u.id)}
+        <div class="adm-i"><b>${esc(nm)}${u.role === 'admin' ? ' <small style="color:#7cc4ff">admin</small>' : ''}${self ? ' <small style="color:var(--dim)">(toi)</small>' : ''}</b>
+        <span>${esc(u.email || 'email non disponible')}</span>
+        <span>Inscrit le ${d(u.created_at)}${u.last_sign_in_at ? ' · vu le ' + d(u.last_sign_in_at) : ''}</span></div>
+        ${self || errTxt ? '<span></span>' : `<button class="danger adm-del admDel" data-id="${esc(u.id)}" data-n="${esc(nm)}">Supprimer</button>`}</div>`;
     }).join('') + '</div>';
   box.querySelectorAll('.admDel').forEach(b => b.onclick = async () => {
     if (!confirm('Supprimer définitivement ' + b.dataset.n + ' de l’appli ?\nSon compte sera effacé et il ne pourra plus se connecter.')) return;
@@ -709,6 +761,43 @@ async function renderAdmin() {
     delete names[b.dataset.id]; delete roles[b.dataset.id]; delete pics[b.dataset.id];
     renderAdmin();
   });
+}
+let pinned = null, pinEdit = false;
+async function loadPinned() {
+  const { data, error } = await db.from('app_settings').select('*').eq('key', 'pinned').maybeSingle();
+  pinned = !error && data && data.value ? data : null; renderPinned();
+}
+function renderPinned() {
+  const box = $('pinBox'); if (!box || !me) return;
+  const adm = roles[me.id] === 'admin';
+  if (pinEdit && adm) {
+    box.innerHTML = `<div class="glass pin"><div class="ph">${ic('pin')}Annonce pour tout le monde</div><textarea id="pinTx" maxlength="500" placeholder="Écris l’annonce…">${esc(pinned ? pinned.value : '')}</textarea><div class="pa" style="justify-content:flex-end;margin:0"><button id="pinCancel">Annuler</button><button class="btn" id="pinSave">Publier</button></div></div>`;
+    $('pinTx').focus();
+    $('pinCancel').onclick = () => { pinEdit = false; renderPinned(); };
+    $('pinSave').onclick = async () => {
+      const v = $('pinTx').value.trim(); if (!v) return;
+      const { error } = await db.from('app_settings').upsert({ key: 'pinned', value: v, updated_by: me.id, updated_at: new Date().toISOString() });
+      if (error) return alert('Publication impossible : ' + error.message + '\nVérifie que le SQL « app_settings » a bien été exécuté dans Supabase.');
+      pinEdit = false; await loadPinned();
+    };
+    return;
+  }
+  if (!pinned) {
+    box.innerHTML = adm ? `<button class="pinAdd" id="pinNew">${ic('pin')}Épingler une annonce</button>` : '';
+    if (adm) $('pinNew').onclick = () => { pinEdit = true; renderPinned(); };
+    return;
+  }
+  const when = pinned.updated_at ? new Date(pinned.updated_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+  box.innerHTML = `<div class="glass pin"><div class="ph">${ic('pin')}Annonce épinglée</div><p>${twem(fmt(linkify(pinned.value)))}</p><div class="pm"><span>${esc(names[pinned.updated_by] || 'Admin')}${when ? ' · ' + esc(when) : ''}</span>${adm ? '<div class="pa"><button id="pinEditBtn">Modifier</button><button id="pinDel">Retirer</button></div>' : ''}</div></div>`;
+  if (adm) {
+    $('pinEditBtn').onclick = () => { pinEdit = true; renderPinned(); };
+    $('pinDel').onclick = async () => {
+      if (!confirm('Retirer l’annonce ?')) return;
+      const { error } = await db.from('app_settings').delete().eq('key', 'pinned');
+      if (error) return alert(error.message);
+      pinned = null; renderPinned();
+    };
+  }
 }
 async function loadProfiles() {
   const { data } = await db.from('profiles').select('*');
@@ -720,6 +809,7 @@ async function start(user) {
   $('auth').style.display = 'none'; $('app').style.display = 'flex';
   await loadProfiles(); render(); renderAdmin(); if (!cch) setupCall(); if (!wch) setupWatch(); if (!gch) setupGames(); if (!tch) setupTalkie(); if (!localStorage.getItem('guideSeen')) $('guide').classList.add('on');
   computeUnread(); loadShows(); initPush(); openFromUrl();
+  loadPinned(); db.channel('live-pin').on('postgres_changes', { event: '*', schema: 'public', table: 'app_settings' }, () => loadPinned()).subscribe(); setInterval(() => { if (!document.hidden) loadPinned(); }, 60000);
   db.channel('live-msg')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, p => {
       const m = p.new;
@@ -1308,7 +1398,7 @@ async function uploadPhoto(file) {
 
 // Conversation
 async function openChat(id, label) {
-  channel = id; $('title').textContent = label; showLinks(id); $('msgs').innerHTML = '';
+  channel = id; $('title').textContent = label; showLinks(id); $('msgs').innerHTML = ''; setEphem(false);
   $('chat').classList.add('on'); gapColor();
   const { data } = await db.from('messages').select('*').eq('channel', id).order('created_at').limit(200);
   if (!data || !data.length) $('msgs').innerHTML = '<div class="empty">Aucun message.<br>Lance la conversation</div>';
@@ -1338,7 +1428,7 @@ const EMO_RE = /\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographi
 const twem = h => h.split(/(<[^>]+>)/).map(x => x[0] === '<' ? x : x.replace(EMO_RE, emo)).join('');
 const ytId = t => (t.match(/(?:youtube\.com\/(?:watch\?(?:[^\s]*&)?v=|shorts\/|embed\/)|youtu\.be\/)([\w-]{11})/) || [])[1];
 const ytBox = id => `<div class="yt" data-id="${id}"><img src="https://i.ytimg.com/vi/${id}/hqdefault.jpg" alt=""><span class="play"></span></div>`;
-let replyTo = null, msgCache = {}, reacts = {}, unread = {};
+let replyTo = null, msgCache = {}, reacts = {}, unread = {}, ephem = false;
 const seen = JSON.parse(localStorage.getItem('seen') || '{}');
 const base = +localStorage.getItem('seenBase') || (localStorage.setItem('seenBase', Date.now()), Date.now());
 const EMO = ['👍', '❤️', '😂', '🔥', '😮', '😢', '🎉', '👀'];
@@ -1379,21 +1469,62 @@ async function delMsg(id) {
   if (error) return alert(error.message);
   const r = $('m-' + id); if (r) r.remove();
 }
+const leftTxt = x => { const ms = new Date(x) - Date.now(); return ms >= 36e5 ? Math.ceil(ms / 36e5) + ' h' : Math.max(1, Math.ceil(ms / 6e4)) + ' min'; };
+function bindSwipe(row, m) {
+  const ico = row.querySelector('.swr'), T = 56;
+  let x0 = 0, y0 = 0, id = null, on = false, dx = 0, went = false;
+  const set = v => { row.style.transform = v ? `translateX(${v}px)` : ''; const q = Math.min(1, v / T); ico.style.opacity = q; ico.style.transform = `scale(${.6 + .4 * q})`; ico.classList.toggle('go', v >= T); };
+  row.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    if (e.target.closest('audio,.yt,a')) return;
+    id = e.pointerId; x0 = e.clientX; y0 = e.clientY; on = false; dx = 0; went = false;
+  });
+  row.addEventListener('pointermove', e => {
+    if (e.pointerId !== id) return;
+    const ddx = e.clientX - x0, ddy = e.clientY - y0;
+    if (!on) {
+      if (Math.abs(ddy) > 10 && Math.abs(ddy) > Math.abs(ddx)) { id = null; return; }
+      if (ddx > 10 && ddx > Math.abs(ddy) * 1.4) { on = true; row._sw = true; row.classList.add('sw'); try { row.setPointerCapture(id); } catch (_) {} }
+      else return;
+    }
+    dx = Math.max(0, Math.min(ddx - 10, 90));
+    set(dx < T ? dx : T + (dx - T) * .25);
+    if (dx >= T && !went) { went = true; try { navigator.vibrate && navigator.vibrate(12); } catch (_) {} }
+    else if (dx < T) went = false;
+  });
+  const end = e => {
+    if (e.pointerId !== id) return; id = null;
+    if (!on) return;
+    on = false; row.classList.remove('sw'); set(0);
+    if (dx >= T && e.type === 'pointerup') { setReply(m); $('text').focus(); }
+    setTimeout(() => { row._sw = false; }, 80);
+  };
+  row.addEventListener('pointerup', end); row.addEventListener('pointercancel', end);
+}
 function addMsg(m) {
   const e0 = $('msgs').querySelector('.empty'); if (e0) e0.remove();
   if ($('m-' + m.id)) return;
+  if (m.expires_at && new Date(m.expires_at) <= new Date()) { if (m.user_id === me.id) db.from('messages').delete().eq('id', m.id).then(() => {}); return; }
   msgCache[m.id] = m; lastId = Math.max(lastId, m.id);
   const mine = m.user_id === me.id, row = document.createElement('div');
   row.className = 'row' + (mine ? ' me' : ''); row.id = 'm-' + m.id;
   const who = !mine && !channel.startsWith('dm:') ? `<b>${esc(names[m.user_id] || '?')}</b>` : '';
   const rm = m.reply_to && msgCache[m.reply_to];
-  const q = rm ? `<div class="q">${esc(names[rm.user_id] || '?')} : ${esc(preview(rm))}</div>` : '';
+  const q = rm ? `<div class="q" data-r="${rm.id}">${esc(names[rm.user_id] || '?')} : ${esc(preview(rm))}</div>` : '';
   const yid = m.content && ytId(m.content);
   const body = m.image_url ? `<a href="${esc(m.image_url)}" target="_blank" rel="noopener"><img class="pic" src="${esc(m.image_url)}" alt=""></a>`
     : m.audio_url ? `<audio controls src="${esc(m.audio_url)}"></audio>` : twem(fmt(linkify(m.content || ''))) + (yid ? ytBox(yid) : '');
   const time = new Date(m.created_at || Date.now()).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-  row.innerHTML = `${mine ? '' : avatar(names[m.user_id] || '?', 30, m.user_id)}<div class="col"><div class="m${mine ? ' me' : ''}">${who}${q}${body}<time>${time}</time></div><div class="rx" id="rx-${m.id}"></div><div class="act"><div class="pick">${EMO.map(x => `<button data-e="${x}">${emo(x)}</button>`).join('')}</div><div class="acts"><button data-a="r">${ic('reply')} Répondre</button>${mine || roles[me.id] === 'admin' ? `<button class="del" data-a="d">${ic('trash')} Supprimer</button>` : ''}</div></div></div>`;
+  row.innerHTML = `<span class="swr">${ic('reply')}</span>${mine ? '' : avatar(names[m.user_id] || '?', 30, m.user_id)}<div class="col"><div class="m${mine ? ' me' : ''}">${who}${q}${body}<time>${time}${m.expires_at ? `<span class="eph" data-x="${esc(m.expires_at)}">${ic('timer')}<em>${leftTxt(m.expires_at)}</em></span>` : ''}</time></div><div class="rx" id="rx-${m.id}"></div><div class="act"><div class="pick">${EMO.map(x => `<button data-e="${x}">${emo(x)}</button>`).join('')}</div><div class="acts"><button data-a="r">${ic('reply')} Répondre</button>${mine || roles[me.id] === 'admin' ? `<button class="del" data-a="d">${ic('trash')} Supprimer</button>` : ''}</div></div></div>`;
+  bindSwipe(row, m);
+  const qq = row.querySelector('.q');
+  if (qq) qq.onclick = ev => {
+    ev.stopPropagation();
+    const t = $('m-' + qq.dataset.r); if (!t) return;
+    t.scrollIntoView({ block: 'center', behavior: 'smooth' }); t.classList.add('hl'); setTimeout(() => t.classList.remove('hl'), 1400);
+  };
   row.querySelector('.m').onclick = ev => {
+    if (row._sw) return;
     const sp = ev.target.closest('.sp'); if (sp) return sp.classList.toggle('on');
     if (!ev.target.closest('a,audio,.yt')) row.classList.toggle('open');
   };
@@ -1409,11 +1540,26 @@ function addMsg(m) {
   $('msgs').append(row); rxRender(m.id); if (stick || mine) scrollEnd();
 }
 async function send(f) {
-  const { data, error } = await db.from('messages').insert({ channel, reply_to: replyTo ? replyTo.id : null, ...f }).select().single();
+  const { data, error } = await db.from('messages').insert({ channel, reply_to: replyTo ? replyTo.id : null, ...(ephem ? { expires_at: new Date(Date.now() + 864e5).toISOString() } : {}), ...f }).select().single();
   if (error) return alert(error.message);
   setReply(null);
   if (data && $('chat').classList.contains('on') && data.channel === channel) { addMsg(data); markSeen(channel); }
 }
+function setEphem(v) {
+  ephem = v; const b = $('ephBtn'); if (!b) return;
+  b.classList.toggle('on', v); $('text').placeholder = v ? 'Message éphémère (disparaît après 24 h)' : 'Message… (/dé /pile /tirage)';
+}
+$('ephBtn').onclick = () => { setEphem(!ephem); if (ephem) toast('Mode éphémère : tes messages disparaissent après 24 h'); };
+setInterval(() => {
+  Object.values(msgCache).forEach(m => {
+    if (!m.expires_at) return;
+    const r = $('m-' + m.id);
+    if (new Date(m.expires_at) <= new Date()) {
+      if (r) r.remove(); delete msgCache[m.id];
+      if (m.user_id === me.id) db.from('messages').delete().eq('id', m.id).then(() => {});
+    } else if (r) { const em = r.querySelector('.eph em'); if (em) em.textContent = leftTxt(m.expires_at); }
+  });
+}, 30000);
 $('imgBtn').onclick = () => $('imgIn').click();
 $('imgIn').onchange = async e => {
   const f = e.target.files[0]; e.target.value = ''; if (!f) return;
@@ -1553,6 +1699,49 @@ const nm = uid => names[uid] || '?';
 const pn = p => names[p.uid] || p.name || '?';
 const balanced = R => inTeam(R, 0).length >= 1 && inTeam(R, 0).length === inTeam(R, 1).length;
 
+let lb = { t: 0, rows: null, busy: false, err: false };
+function recordResult(R, wt) {
+  if (!R.st || R.st.rec) return; R.st.rec = true;
+  const rows = R.players.map(p => ({ game: R.game, user_id: p.uid, won: p.team === wt }));
+  db.from('game_results').insert(rows).then(({ error }) => { if (!error) lb.t = 0; });
+}
+async function lbLoad() {
+  if (lb.busy || Date.now() - lb.t < 30000) return; lb.busy = true;
+  const { data, error } = await db.from('game_results').select('user_id,won,created_at').order('created_at').limit(5000);
+  lb.busy = false; lb.t = Date.now(); lb.err = !!error; lb.rows = data || [];
+  if (!cur) gRender();
+}
+const BADGES = [
+  { e: '🎉', n: 'Première victoire', v: s => s.w, t: 1 },
+  { e: '🏅', n: '10 victoires', v: s => s.w, t: 10 },
+  { e: '💎', n: '25 victoires', v: s => s.w, t: 25 },
+  { e: '👑', n: '50 victoires', v: s => s.w, t: 50 },
+  { e: '🔥', n: 'Série de 3', v: s => s.best, t: 3 },
+  { e: '⚡', n: 'Série de 5', v: s => s.best, t: 5 },
+  { e: '🚀', n: 'Série de 10', v: s => s.best, t: 10 },
+  { e: '🎮', n: '20 parties jouées', v: s => s.p, t: 20 }
+];
+function lbStats() {
+  const m = {};
+  (lb.rows || []).forEach(r => {
+    const s = m[r.user_id] = m[r.user_id] || { id: r.user_id, p: 0, w: 0, run: 0, best: 0 };
+    s.p++; if (r.won) { s.w++; s.run++; s.best = Math.max(s.best, s.run); } else s.run = 0;
+  });
+  return m;
+}
+function lbView() {
+  lbLoad();
+  const h = '<h3 style="margin:26px 0 10px;font-size:18px">Classement général</h3>';
+  if (lb.err) return h + '<p class="sub">Classement indisponible : la table « game_results » n’existe pas encore dans Supabase.</p>';
+  if (!lb.rows) return h + '<p class="sub">Chargement…</p>';
+  const st = lbStats(), list = Object.values(st).sort((a, b) => b.w - a.w || b.best - a.best || a.p - b.p);
+  const mine = st[me.id] || { w: 0, p: 0, best: 0, run: 0 };
+  const medal = ['🥇', '🥈', '🥉'];
+  const rows = list.length ? `<div class="glass set" style="gap:0">${list.map((s, i) => `<div class="lbr"><span class="lbn">${i < 3 ? emo(medal[i]) : i + 1}</span>${avatar(nm(s.id), 36, s.id)}<div class="lbi"><b>${esc(s.id === me.id ? nm(s.id) + ' (toi)' : nm(s.id))}</b><span>${s.p} partie${s.p > 1 ? 's' : ''} · ${Math.round(100 * s.w / s.p)} % de victoires · série max ${s.best}${s.run >= 2 ? ' · en série : ' + s.run : ''}</span><div class="lbb">${BADGES.filter(b => b.v(s) >= b.t).map(b => `<span title="${esc(b.n)}">${emo(b.e)}</span>`).join('')}</div></div><strong>${s.w}</strong></div>`).join('')}</div>`
+    : '<p class="sub">Aucune partie terminée pour l’instant. Les victoires s’afficheront ici.</p>';
+  const bd = `<h3 style="margin:22px 0 10px;font-size:18px">Mes badges</h3><div class="bds">${BADGES.map(b => { const v = b.v(mine), ok = v >= b.t; return `<div class="bd${ok ? ' on' : ''}">${emo(b.e)}<div><b>${esc(b.n)}</b><small>${ok ? 'Obtenu' : Math.min(v, b.t) + ' / ' + b.t}</small></div></div>`; }).join('')}</div>`;
+  return h + rows + bd;
+}
 function setupGames() {
   gch = db.channel('games', { config: { presence: { key: SID }, broadcast: { self: false } } });
   gch.on('broadcast', { event: 'g' }, ({ payload }) => onG(payload))
@@ -1611,7 +1800,7 @@ function hostAct(R, p) {
     const pl = R.players.find(x => x.uid === p.from); if (!pl) return;
     if (R.status === 'play') {
       const w = 1 - pl.team; R.sc[w]++;
-      R.st.win = { team: w, line: [], who: inTeam(R, w).map(pn).join(' & '), forfeit: true }; R.status = 'done';
+      R.st.win = { team: w, line: [], who: inTeam(R, w).map(pn).join(' & '), forfeit: true }; R.status = 'done'; recordResult(R, w);
     }
     R.players = R.players.filter(x => x !== pl); R.n++;
   } else if (p.t === 'start') {
@@ -1652,7 +1841,7 @@ function applyMove(R, uid, mv) {
   }
   s.b[at] = team; s.last = at; R.n++;
   const line = lineWin(s.b, g.w, g.h, g.k, at, team);
-  if (line) { s.win = { team, line, who: inTeam(R, team).map(pn).join(' & ') }; R.sc[team]++; R.status = 'done'; }
+  if (line) { s.win = { team, line, who: inTeam(R, team).map(pn).join(' & ') }; R.sc[team]++; R.status = 'done'; recordResult(R, team); }
   else if (s.b.every(v => v != null)) { s.win = 'draw'; R.status = 'done'; }
   else s.turn = (s.turn + 1) % s.order.length;
   return true;
@@ -1704,7 +1893,8 @@ function homeView() {
     + Object.entries(GAMES).map(([id, g]) => `<div class="glass set"><div style="display:flex;align-items:center;gap:14px"><div class="ico">${ic(id)}</div><div><b style="font-size:17px;display:block">${g.name}</b><span style="color:var(--dim);font-size:13px">${g.desc}</span></div></div>`
       + `<div style="display:flex;gap:8px"><button class="btn" style="flex:1" data-g="new" data-game="${id}" data-mode="1v1">1 contre 1</button><button class="btn" style="flex:1" data-g="new" data-game="${id}" data-mode="2v2">2 contre 2</button></div></div>`).join('')
     + '<h3 style="margin:22px 0 10px;font-size:18px">Parties en cours</h3>'
-    + (list.length ? list.map(roomCard).join('') : '<p class="sub">Aucune partie pour l’instant. Lance-en une !</p>');
+    + (list.length ? list.map(roomCard).join('') : '<p class="sub">Aucune partie pour l’instant. Lance-en une !</p>')
+    + lbView();
 }
 function roomCard(R) {
   const mine = teamOf(R, me.id) >= 0, open = R.status === 'lobby' && R.players.length < cap(R);
