@@ -439,6 +439,7 @@ body{background:radial-gradient(80% 40% at 50% 100%,rgba(29,78,216,.38),transpar
       <label for="newname">Changer de pseudo</label><input id="newname" maxlength="20">
       <button class="btn" id="saveName">Enregistrer</button></div>
     <div class="glass set"><b>Notifications</b><p id="pushState" style="color:var(--dim);font-size:13px;line-height:1.45"></p><button class="btn" id="pushBtn">Activer les notifications</button></div>
+    <div id="adminBox"></div>
     <button class="danger" id="logout" data-i="logout">Se déconnecter</button>
     <p id="diag" style="color:var(--dim);font-size:12px;margin-top:18px;text-align:center;line-height:1.5"></p></section>
 
@@ -677,6 +678,38 @@ db.auth.onAuthStateChange((ev, session) => {
   else { $('app').style.display = 'none'; $('auth').style.display = 'grid'; }
 });
 
+// Administration : liste des membres et suppression (réservé au rôle admin)
+async function renderAdmin() {
+  const box = $('adminBox'); if (!box) return;
+  if (!me || roles[me.id] !== 'admin') { box.innerHTML = ''; return; }
+  await loadProfiles();
+  let rows = null, errTxt = '';
+  const r = await db.rpc('admin_list_users');
+  if (!r.error) rows = r.data || [];
+  else {
+    errTxt = 'Fonctions admin non installées dans Supabase : liste limitée, suppression indisponible (voir le SQL fourni).';
+    const p = await db.from('profiles').select('*');
+    rows = (p.data || []).map(x => ({ id: x.id, username: x.username, role: x.role }));
+  }
+  const d = v => v ? new Date(v).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : '–';
+  box.innerHTML = `<div class="glass set"><b>Administration · ${rows.length} membre${rows.length > 1 ? 's' : ''}</b>`
+    + (errTxt ? `<p style="color:#fde68a;font-size:12.5px;line-height:1.45">${esc(errTxt)}</p>` : '')
+    + rows.map(u => {
+      const self = u.id === me.id, nm = u.username || (u.email || '?').split('@')[0];
+      return `<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-top:1px solid rgba(130,175,255,.12)">${avatar(nm, 40, u.id)}
+        <div style="min-width:0;flex:1"><b style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(nm)}${u.role === 'admin' ? ' <small style="color:#7cc4ff">admin</small>' : ''}${self ? ' <small style="color:var(--dim)">(toi)</small>' : ''}</b>
+        <span style="display:block;color:var(--dim);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(u.email || '')}${u.email ? ' · ' : ''}inscrit le ${d(u.created_at)}${u.last_sign_in_at ? ' · vu le ' + d(u.last_sign_in_at) : ''}</span></div>
+        ${self || errTxt ? '' : `<button class="danger admDel" data-id="${esc(u.id)}" data-n="${esc(nm)}" style="width:auto;padding:9px 12px;font-size:13px">Supprimer</button>`}</div>`;
+    }).join('') + '</div>';
+  box.querySelectorAll('.admDel').forEach(b => b.onclick = async () => {
+    if (!confirm('Supprimer définitivement ' + b.dataset.n + ' de l’appli ?\nSon compte sera effacé et il ne pourra plus se connecter.')) return;
+    b.disabled = true; b.textContent = '…';
+    const { error } = await db.rpc('admin_delete_user', { uid: b.dataset.id });
+    if (error) { alert('Suppression impossible : ' + error.message); b.disabled = false; b.textContent = 'Supprimer'; return; }
+    delete names[b.dataset.id]; delete roles[b.dataset.id]; delete pics[b.dataset.id];
+    renderAdmin();
+  });
+}
 async function loadProfiles() {
   const { data } = await db.from('profiles').select('*');
   (data || []).forEach(p => { names[p.id] = p.username; roles[p.id] = p.role; if (p.avatar_url) pics[p.id] = p.avatar_url; });
@@ -685,7 +718,7 @@ async function start(user) {
   if (me && me.id === user.id) return;
   me = user;
   $('auth').style.display = 'none'; $('app').style.display = 'flex';
-  await loadProfiles(); render(); if (!cch) setupCall(); if (!wch) setupWatch(); if (!gch) setupGames(); if (!tch) setupTalkie(); if (!localStorage.getItem('guideSeen')) $('guide').classList.add('on');
+  await loadProfiles(); render(); renderAdmin(); if (!cch) setupCall(); if (!wch) setupWatch(); if (!gch) setupGames(); if (!tch) setupTalkie(); if (!localStorage.getItem('guideSeen')) $('guide').classList.add('on');
   computeUnread(); loadShows(); initPush(); openFromUrl();
   db.channel('live-msg')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, p => {
@@ -736,6 +769,7 @@ document.querySelectorAll('#tabs button').forEach(b => b.onclick = async () => {
   document.querySelectorAll('.panel').forEach(p => p.classList.toggle('on', p.id === 'p-' + b.dataset.t));
   if (b.dataset.t === 'prive') { await loadProfiles(); render(); }
   if (b.dataset.t === 'jeux') gRender();
+  if (b.dataset.t === 'reglages') renderAdmin();
   if (b.dataset.t === 'cine') cineLoad();
 });
 // Barre d'onglets : bulle lumineuse qui glisse + reflet qui suit l'inclinaison
