@@ -403,8 +403,10 @@ body{background:radial-gradient(80% 40% at 50% 100%,rgba(29,78,216,.38),transpar
     <input id="email" type="email" placeholder="Email" required autocomplete="email">
     <input id="pass" type="password" placeholder="Mot de passe (6+ caractères)" required autocomplete="current-password">
     <button class="btn" id="authBtn">Se connecter</button>
+    <small id="forgot">Mot de passe oublié ?</small>
     <small id="toggle">Pas de compte ? Créer un compte</small>
     <small id="err" style="color:#f87171;cursor:default"></small>
+    <small id="ok" style="color:#34d399;cursor:default;display:none"></small>
   </form>
 </div>
 
@@ -625,23 +627,52 @@ function hideSplash() {
 setTimeout(hideSplash, 6000);
 
 // Connexion
-$('toggle').onclick = () => {
-  signup = !signup;
-  $('user').style.display = signup ? '' : 'none';
-  $('authBtn').textContent = signup ? 'Créer le compte' : 'Se connecter';
+let pwRecovery = /type=recovery/.test(location.hash) || /type=recovery/.test(location.search);
+const authMsg = (t, ok) => { $('err').textContent = ok ? '' : (t || ''); $('ok').textContent = ok ? t : ''; $('ok').style.display = ok ? '' : 'none'; };
+function authMode() {
+  const rec = pwRecovery;
+  $('user').style.display = signup && !rec ? '' : 'none';
+  $('email').style.display = rec ? 'none' : ''; $('email').required = !rec;
+  $('pass').placeholder = rec ? 'Nouveau mot de passe (6+ caractères)' : 'Mot de passe (6+ caractères)';
+  $('pass').autocomplete = rec ? 'new-password' : signup ? 'new-password' : 'current-password';
+  $('authBtn').textContent = rec ? 'Enregistrer le nouveau mot de passe' : signup ? 'Créer le compte' : 'Se connecter';
+  $('forgot').style.display = rec || signup ? 'none' : '';
+  $('toggle').style.display = rec ? 'none' : '';
   $('toggle').textContent = signup ? 'Déjà un compte ? Se connecter' : 'Pas de compte ? Créer un compte';
+}
+$('toggle').onclick = () => { signup = !signup; authMsg(''); authMode(); };
+$('forgot').onclick = async () => {
+  const email = $('email').value.trim();
+  if (!email) { authMsg('Entre ton email ci-dessus, puis clique à nouveau sur « Mot de passe oublié ».'); $('email').focus(); return; }
+  authMsg('');
+  const { error } = await db.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+  if (error) authMsg(/rate|seconds|too many/i.test(error.message) ? 'Trop de demandes, patiente une minute puis réessaie.' : error.message);
+  else authMsg('Si un compte existe pour cet email, un lien de réinitialisation vient d’être envoyé. Pense à vérifier les spams.', true);
 };
+authMode();
 $('authForm').onsubmit = async e => {
-  e.preventDefault(); $('err').textContent = '';
+  e.preventDefault(); authMsg('');
+  if (pwRecovery) {
+    const pw = $('pass').value;
+    if (pw.length < 6) { authMsg('6 caractères minimum.'); return; }
+    const { error } = await db.auth.updateUser({ password: pw });
+    if (error) { authMsg(error.message); return; }
+    pwRecovery = false; history.replaceState(null, '', location.pathname); $('pass').value = ''; authMode();
+    const { data } = await db.auth.getSession();
+    if (data.session) start(data.session.user);
+    return;
+  }
   const email = $('email').value, password = $('pass').value;
   const { error } = signup
     ? await db.auth.signUp({ email, password, options: { data: { username: $('user').value || email.split('@')[0] } } })
     : await db.auth.signInWithPassword({ email, password });
-  if (error) $('err').textContent = error.message;
+  if (error) authMsg(error.message);
 };
 $('logout').onclick = async () => { await dropPush(); db.auth.signOut(); };
-db.auth.onAuthStateChange((_, session) => {
+db.auth.onAuthStateChange((ev, session) => {
   hideSplash();
+  if (ev === 'PASSWORD_RECOVERY') { pwRecovery = true; authMode(); $('app').style.display = 'none'; $('auth').style.display = 'grid'; return; }
+  if (pwRecovery && session) { $('app').style.display = 'none'; $('auth').style.display = 'grid'; return; }
   if (session) start(session.user);
   else { $('app').style.display = 'none'; $('auth').style.display = 'grid'; }
 });
